@@ -41,7 +41,7 @@ func parseLine(b *Bobfile, line CleanLine) {
 		return
 	}
 
-	if parseVar(b, line) {
+	if parseGlobalVar(b, line) {
 		return
 	}
 
@@ -50,17 +50,59 @@ func parseLine(b *Bobfile, line CleanLine) {
 	}
 }
 
-func parseVar(b *Bobfile, line CleanLine) bool {
-	split := strings.Split(line.content, ":=")
-	if len(split) < 2 {
+func isInsideBraces(s, target string) bool {
+	depth := 0
+	idx := strings.Index(s, target)
+	if idx == -1 {
+		return false
+	}
+	for _, ch := range s[:idx] {
+		switch ch {
+		case '{':
+			depth++
+		case '}':
+			depth--
+		}
+	}
+	return depth > 0
+}
+
+func parseGlobalVar(b *Bobfile, line CleanLine) bool {
+	if isInsideBraces(line.content, VarPrefix) {
+		// this is a local var
 		return false
 	}
 
-	name := strings.TrimSpace(split[0])
-	value := strings.TrimSpace(split[1])
+	key, value := parseVar(line.content)
+	if key == "" || value == "" {
+		return false
+	}
 
-	b.Vars[name] = value
+	b.Vars[key] = value
 	return true
+}
+
+const VarPrefix = "@"
+
+func isVar(line string) bool {
+	return strings.HasPrefix(line, VarPrefix)
+}
+
+func parseVar(line string) (key string, val string) {
+	if !isVar(line) {
+		return "", ""
+	}
+
+	line = strings.TrimPrefix(line, VarPrefix)
+	split := strings.Split(line, "=")
+	if len(split) < 2 {
+		return "", ""
+	}
+
+	key = strings.TrimSpace(split[0])
+	val = strings.TrimSpace(split[1])
+
+	return key, val
 }
 
 func parseCmd(b *Bobfile, line CleanLine) bool {
@@ -145,30 +187,46 @@ func parseCmd(b *Bobfile, line CleanLine) bool {
 	}
 
 	cmd.args = convertTokToArgs(args)
-	cmd.tasks = convertBodyToTasks(body)
+	cmd.tasks, cmd.vars = convertBodyToTasks(body)
 	cmd.name = cmdName
 	b.Cmds[cmdName] = cmd
 
 	return true
 }
 
-func convertBodyToTasks(body string) []Task {
+func convertBodyToTasks(body string) ([]Task, VarMap) {
 	var tasks []Task
+	var varMap = VarMap{}
 
-	for _, spl := range strings.Split(body, "\n") {
-		cmd := strings.Trim(strings.TrimSpace(spl), "\n")
-		if strings.HasPrefix(cmd, "//") {
+	for _, s := range strings.Split(body, "\n") {
+		cleanCmd := cleanLine(s)
+		if cleanCmd == "" || strings.HasPrefix(cleanCmd, "//") {
 			continue
 		}
 
-		tasks = append(tasks,
-			Task{
-				cmd: cmd,
-			},
-		)
+		var ts Task
+		if isVar(cleanCmd) {
+			key, val := parseVar(cleanCmd)
+			if key == "" || val == "" {
+				// todo handle this
+				continue
+			}
+
+			varMap.Add(key, val)
+
+			continue
+		}
+
+		ts.cmd = cleanCmd
+		tasks = append(tasks, ts)
 	}
 
-	return tasks
+	return tasks, varMap
+}
+
+// cleanLine removes new lines and spaces at the start of a line
+func cleanLine(spl string) string {
+	return strings.Trim(strings.TrimSpace(spl), "\n")
 }
 
 func convertTokToArgs(rawArgs string) map[string]Arg {
@@ -186,12 +244,12 @@ func convertTokToArgs(rawArgs string) map[string]Arg {
 
 		var ar Arg
 
-		arg = strings.Trim(strings.TrimSpace(arg), "\n")
+		arg = cleanLine(arg)
 		defV := strings.Split(arg, "=")
 
 		// has default
 		if len(defV) > 1 {
-			ar.defaultVal = strings.Trim(strings.TrimSpace(defV[1]), "\n")
+			ar.defaultVal = cleanLine(defV[1])
 		}
 
 		segs := strings.Split(defV[0], ":")

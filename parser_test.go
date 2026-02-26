@@ -4,9 +4,9 @@ import "testing"
 
 var con = `version: 3
 
-as := aasdasd
+@as=aasdasd
 
-sd := 1
+@sd=1
 
 hello() {
     print("hello world")
@@ -22,10 +22,13 @@ otherP: sd = asdasd,
 }
 `
 
-var sd = `bd(out=.build) {
-    clear
-    go build -o ${out}/dev
-    // ./dev hello2 user=lmao
+var sd = `
+dk:rn() {
+	@img = test
+	@tag = wow	
+
+    bob dk 
+    docker run --rm -p 3002:3000 ${img}:${tag}
 }
 `
 

@@ -20,6 +20,7 @@ type Task struct {
 type Cmd struct {
 	name string
 	args map[string]Arg
+	vars VarMap
 	// commands to run
 	tasks []Task
 }
@@ -46,7 +47,14 @@ func (cm *CommandMap) GetCmdList() string {
 	return sb.String()
 }
 
-type VarMap = map[string]string
+type VarMap map[string]string
+
+func (m *VarMap) Add(key, val string) {
+	if *m == nil {
+		*m = make(map[string]string)
+	}
+	(*m)[key] = val
+}
 
 type Bobfile struct {
 	Version int

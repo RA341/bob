@@ -1,20 +1,32 @@
 version: 1
 
-as := aasdasd
+@as = aasdasd
 
 hello() {
     print("hello world")
 }
 
-helloUser(user: str!, opt lol) {
+helloUser(user!) {
     workdir(.build)
     print(hello ${user})
     git status
 }
 
+size(out=.build/dev) {
+    du -sh ${out}
+}
+
+@tes = wow
 bd(out=.build/dev) {
+    // @tes = kill me
     //clear
     go build -o ${out}
-    ./${out}
+    print(${tes})
+
+    //./${out}
     // ./dev hello2 user=lmao
+}
+
+install(){
+    go install
 }

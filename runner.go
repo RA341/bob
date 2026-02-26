@@ -141,6 +141,9 @@ func (r *Runner) replaceArgIfAny(args string, cmd *Cmd) string {
 	for _, x := range matches {
 		// get value inside ${}
 		argName := x[1]
+		if argName == "" {
+			continue
+		}
 
 		argVal, ok := cmd.args[argName]
 		if ok {
@@ -149,7 +152,13 @@ func (r *Runner) replaceArgIfAny(args string, cmd *Cmd) string {
 			continue
 		}
 
-		val, ok := r.bf.Vars[argName]
+		val, ok := cmd.vars[argName]
+		if ok {
+			replaceFn(argName, val)
+			continue
+		}
+
+		val, ok = r.bf.Vars[argName]
 		if ok {
 			replaceFn(argName, val)
 			continue
