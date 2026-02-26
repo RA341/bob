@@ -1,6 +1,13 @@
-hello:
-    if .OS {
+version: 1
 
-    }
+as := aasdasd
+
+hello() {
     print("hello world")
+}
 
+hello2(user: str!, opt lol) {
+    workdir core
+    print("hello ${user}")
+    git status
+}
