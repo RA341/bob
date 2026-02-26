@@ -1,82 +1,177 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
+	"regexp"
+	"strings"
 )
 
-func Execute(bf *Bobfile) {
+type Runner struct {
+	bf        *Bobfile
+	finalArgs []string
+	argLen    int
+	ctx       context.Context
+}
+
+func NewRunner(ctx context.Context, bf *Bobfile) {
+	r := Runner{
+		bf:  bf,
+		ctx: ctx,
+	}
+
 	if len(os.Args) < 1 {
 		fmt.Println("Usage: bob <command>")
-		cl := bf.Cmds.GetCmdList()
-		fmt.Println("Available commands: ", cl)
+		r.printAvailCmd()
 		return
 	}
 
-	realArgs := os.Args[1:]
-	argLen := len(realArgs)
+	r.finalArgs = os.Args[1:]
+	r.argLen = len(r.finalArgs)
 
-	if argLen > 0 {
-		task := realArgs[0]
-		val, ok := bf.Cmds[task]
+	//fmt.Println("Args: ", r.finalArgs)
+
+	r.Execute()
+}
+
+func (r *Runner) Execute() {
+	if r.argLen > 0 {
+		task := r.finalArgs[0]
+		val, ok := r.bf.Cmds[task]
 		if !ok {
 			fmt.Printf("Unknown cmd: %s\n", task)
-			cl := bf.Cmds.GetCmdList()
-			fmt.Println("Available commands: ", cl)
+			r.printAvailCmd()
 		}
 
-		runSubCmd(bf, &val)
+		r.runSubCmd(&val)
 	}
 }
 
-type BuiltInFunc func(vals ...interface{}) error
-
-var builtInMaps = map[string]BuiltInFunc{
-	"print": func(vals ...interface{}) error {
-		fmt.Println(vals...)
-		return nil
-	},
+func (r *Runner) printAvailCmd() {
+	cl := r.bf.Cmds.GetCmdList()
+	fmt.Println("Available commands: ", cl)
 }
 
-func runSubCmd(bf *Bobfile, c *Cmd) {
+func (r *Runner) runSubCmd(c *Cmd) {
 	for _, t := range c.tasks {
-		if checkAndRunBuiltin(bf, &t) {
+		if r.runBuiltin(&t, c) {
 			continue
 		}
 
-		runShell(bf, &t)
+		r.runShell(&t, c)
 	}
 }
 
-func runShell(bf *Bobfile, t *Task) {
-	fmt.Println("Running in Shell", t.cmd)
+func (r *Runner) runShell(t *Task, cmd *Cmd) {
+	fmt.Println("Executing shell [", t.cmd, "]")
+
+	execStr := strings.Split(t.cmd, " ")
+	ex := exec.CommandContext(r.ctx, execStr[0], execStr[1:]...)
+	ex.Stdout = os.Stdout
+	ex.Stderr = os.Stderr
+	ex.Stdin = os.Stdin
+
+	err := ex.Run()
+	if err != nil {
+		log.Fatal("Error running command", err)
+	}
 }
 
 // parses and runs a builtin if exists
-func checkAndRunBuiltin(bf *Bobfile, t *Task) bool {
+func (r *Runner) runBuiltin(t *Task, cmd *Cmd) bool {
 	acc := ""
+
+	name := ""
+	args := ""
+	var execFn BuiltInFunc
 
 	for _, sd := range t.cmd {
 		sdStr := string(sd)
 		if sdStr == "(" {
-			val, ok := builtInMaps[acc]
+			name = acc
+
+			var ok bool
+			execFn, ok = builtInMaps[name]
 			if !ok {
 				return false
-			}
-
-			fmt.Println("Executing:", acc)
-			err := val("Some val")
-			if err != nil {
-				log.Fatal(err)
 			}
 
 			acc = ""
 			continue
 		}
 
+		if sdStr == ")" {
+			args = acc
+		}
+
 		acc += sdStr
 	}
 
-	return false
+	if execFn == nil {
+		return false
+	}
+
+	args = r.replaceArgIfAny(args, cmd)
+	fmt.Println("Executing builtin [", name, args, "]")
+
+	err := execFn(strings.Split(args, ",")...)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return true
+}
+
+func (r *Runner) replaceArgIfAny(args string, cmd *Cmd) string {
+	re := regexp.MustCompile(`\$\{([^}]+)}`)
+	matches := re.FindAllStringSubmatch(args, -1)
+
+	replaceFn := func(argName, actualVal string) string {
+		replaceStr := fmt.Sprintf("${%s}", argName)
+		args = strings.ReplaceAll(args, replaceStr, actualVal)
+
+		//fmt.Printf("%s = %s\n", argName, replaceStr)
+		return replaceStr
+	}
+
+	for _, x := range matches {
+		// get value inside ${}
+		argName := x[1]
+
+		argVal, ok := cmd.args[argName]
+		if ok {
+			val := r.getArgVal(&argVal, cmd)
+			replaceFn(argName, val)
+			continue
+		}
+
+		val, ok := r.bf.Vars[argName]
+		if ok {
+			replaceFn(argName, val)
+			continue
+		}
+	}
+
+	return args
+}
+
+func (r *Runner) getArgVal(a *Arg, cmd *Cmd) string {
+	argCmds := r.finalArgs[1:]
+
+	for _, ac := range argCmds {
+		splt := strings.Split(ac, "=")
+		if len(splt) == 2 && splt[0] == a.name {
+			return splt[1]
+		}
+	}
+
+	if a.required {
+		example := fmt.Sprintf("%s %s %s=value", os.Args[0], cmd.name, a.name)
+		log.Fatal("Argument ", a.name, " is required, pass it like so ", example)
+	}
+
+	return a.defaultVal
 }

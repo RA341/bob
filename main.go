@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"path/filepath"
@@ -22,7 +23,9 @@ func main() {
 	var bobFile Bobfile
 	ParseFromFile(&bobFile, bobFilePath)
 
-	Execute(&bobFile)
+	ctx := context.Background()
+
+	NewRunner(ctx, &bobFile)
 }
 
 func getBobFilePath(bobBase string) string {

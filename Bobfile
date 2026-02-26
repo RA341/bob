@@ -7,7 +7,13 @@ hello() {
 }
 
 hello2(user: str!, opt lol) {
-    workdir core
-    print("hello ${user}")
+    workdir(.build)
+    print(hello ${user})
     git status
+}
+
+bd(){
+    clear
+    go build -o dev
+    ./dev hello2 user=lmao
 }
