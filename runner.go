@@ -23,7 +23,7 @@ func NewRunner(ctx context.Context, bf *Bobfile) {
 		ctx: ctx,
 	}
 
-	if len(os.Args) < 1 {
+	if len(os.Args) < 2 {
 		fmt.Println("Usage: bob <command>")
 		r.printAvailCmd()
 		return
@@ -66,6 +66,7 @@ func (r *Runner) runSubCmd(c *Cmd) {
 }
 
 func (r *Runner) runShell(t *Task, cmd *Cmd) {
+	t.cmd = r.replaceArgIfAny(t.cmd, cmd)
 	fmt.Println("Executing shell [", t.cmd, "]")
 
 	execStr := strings.Split(t.cmd, " ")

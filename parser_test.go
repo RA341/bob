@@ -22,10 +22,17 @@ otherP: sd = asdasd,
 }
 `
 
+var sd = `bd(out=.build) {
+    clear
+    go build -o ${out}/dev
+    // ./dev hello2 user=lmao
+}
+`
+
 func Test_parseCmd(t *testing.T) {
 	var b Bobfile
 
-	parseCmd(&b, CleanLine{})
+	ParseFromBytes(&b, []byte(sd))
 }
 
 func TestParse(t *testing.T) {

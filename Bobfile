@@ -6,14 +6,15 @@ hello() {
     print("hello world")
 }
 
-hello2(user: str!, opt lol) {
+helloUser(user: str!, opt lol) {
     workdir(.build)
     print(hello ${user})
     git status
 }
 
-bd(){
-    clear
-    go build -o dev
-    ./dev hello2 user=lmao
+bd(out=.build/dev) {
+    //clear
+    go build -o ${out}
+    ./${out}
+    // ./dev hello2 user=lmao
 }

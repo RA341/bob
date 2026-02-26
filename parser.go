@@ -157,6 +157,10 @@ func convertBodyToTasks(body string) []Task {
 
 	for _, spl := range strings.Split(body, "\n") {
 		cmd := strings.Trim(strings.TrimSpace(spl), "\n")
+		if strings.HasPrefix(cmd, "//") {
+			continue
+		}
+
 		tasks = append(tasks,
 			Task{
 				cmd: cmd,

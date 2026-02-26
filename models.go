@@ -36,12 +36,14 @@ func (p Cmd) String() string {
 
 type CommandMap map[string]Cmd
 
-func (cm *CommandMap) GetCmdList() []string {
-	var names []string
+func (cm *CommandMap) GetCmdList() string {
+	var sb strings.Builder
+	sb.WriteString("\n")
 	for name := range *cm {
-		names = append(names, name)
+		sb.WriteString(" => " + name + "\n")
 	}
-	return names
+
+	return sb.String()
 }
 
 type VarMap = map[string]string
