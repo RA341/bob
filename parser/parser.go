@@ -69,9 +69,9 @@ func (b *Bobfile) parseLine(line CleanLine) error {
 		return nil
 	}
 
-	//if b.parseCmd(line) {
-	//	return
-	//}
+	if b.parseCmd(line) {
+		return nil
+	}
 
 	return nil
 }
@@ -84,8 +84,7 @@ func (b *Bobfile) parseGlobalVar(line CleanLine) (bool, error) {
 	return b.parseVar(&line)
 }
 
-func (b *Bobfile) parseVar(cl *CleanLine) (ok bool, err error) {
-	line := cl.content
+func (b *Bobfile) parseVar(line string) (ins []vm.Ins, err error) {
 	if !isVar(line) {
 		return false, nil
 	}
@@ -109,7 +108,6 @@ func (b *Bobfile) parseVar(cl *CleanLine) (ok bool, err error) {
 				"invalid type name %q must be one of %v\nLine [%d]: %q",
 				argNameSplit[1],
 				vm.ValueTypeValues(),
-				cl.lineNum,
 				line,
 			)
 		}
@@ -132,7 +130,10 @@ func (b *Bobfile) parseVar(cl *CleanLine) (ok bool, err error) {
 			case space == "+":
 				expr = append(expr, vm.O(vm.ADD))
 			case isVar(space):
-				expr = append(expr, vm.OVStr(vm.LOAD, strings.TrimPrefix(v, VarPrefix)))
+				expr = append(
+					expr,
+					vm.OVStr(vm.LOAD, strings.TrimPrefix(v, VarPrefix)),
+				)
 			}
 		}
 
@@ -183,7 +184,7 @@ func toPostfix(s string) []string {
 		"*": 2, "/": 2,
 	}
 
-	tokens := tokenize(s) // you'll need to split into tokens first
+	tokens := tokenize(s)
 
 	for _, tok := range tokens {
 		switch tok {
@@ -302,7 +303,7 @@ func (b *Bobfile) parseCmd(line CleanLine) bool {
 	}
 
 	cmd.args = b.convertArgs(args)
-	cmd.tasks, cmd.vars = b.convertBodyToTasks(body)
+	cmd.tasks, cmd.vars = b.convertBody(body)
 	cmd.name = cmdName
 	b.Cmds[cmdName] = cmd
 
@@ -376,9 +377,11 @@ func (b *Bobfile) convertArgs(rawArgs string) map[string]Arg {
 	return args
 }
 
-func (b *Bobfile) convertBodyToTasks(body string) ([]Task, VarMap) {
+func (b *Bobfile) convertBody(body string) ([]Task, VarMap) {
 	var tasks []Task
 	var varMap = VarMap{}
+
+	var ins []vm.Ins
 
 	for _, s := range strings.Split(body, "\n") {
 		cleanCmd := cleanLine(s)
@@ -386,21 +389,20 @@ func (b *Bobfile) convertBodyToTasks(body string) ([]Task, VarMap) {
 			continue
 		}
 
-		var ts Task
-		if isVar(cleanCmd) {
-			// todo
-			//key, val, err := b.parseVar(&CleanLine{content: cleanCmd})
-			//if err != nil {
-			//	// todo handle err
-			//	log.Fatal(err)
-			//}
-			//if key == "" || val.Raw == "" {
-			//	// todo handle this
-			//	continue
-			//}
-			//
-			//varMap.Add(key, val.Raw)
-			continue
+		switch {
+		case isFn(cleanCmd):
+
+		case isVar(cleanCmd):
+			varInitIns, err := b.parseVar(cleanCmd)
+			if err != nil {
+				// todo handle err
+				log.Fatal(err)
+			}
+
+			ins = append(
+				ins,
+				varInitIns...,
+			)
 		}
 
 		ts.cmd = cleanCmd
@@ -408,6 +410,10 @@ func (b *Bobfile) convertBodyToTasks(body string) ([]Task, VarMap) {
 	}
 
 	return tasks, varMap
+}
+
+func isFn(cmd string) bool {
+
 }
 
 func (b *Bobfile) parseVersion(line CleanLine) (bool, error) {

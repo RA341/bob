@@ -43,14 +43,19 @@ func TestParser_global_var(t *testing.T) {
 	val, ok = vmm.Vars["someExpr"]
 	require.True(t, ok)
 	require.Equal(t, vm.VTString, val.Type)
-	require.Equal(t, "valuevalue"+
-		"", val.Raw)
+	require.Equal(t, "valuevalue", val.Raw)
 }
 
 func TestParser_Hello_world(t *testing.T) {
 	bobFile := `hello() {
     	print("hello world")
-	}`
+	}
+
+	hello2(){
+		@someVar = "world"
+		hello()
+	}
+`
 	var bd Bobfile
 	err := NewBobFileFromBytes(&bd, []byte(bobFile))
 	require.NoError(t, err)
