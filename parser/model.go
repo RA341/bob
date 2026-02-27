@@ -1,8 +1,10 @@
-package main
+package parser
 
 import (
 	"fmt"
 	"strings"
+
+	"github.com/RA341/bob/util"
 )
 
 type Arg struct {
@@ -40,8 +42,14 @@ type CommandMap map[string]Cmd
 func (cm *CommandMap) GetCmdList() string {
 	var sb strings.Builder
 	sb.WriteString("\n")
-	for name := range *cm {
-		sb.WriteString(" => " + name + "\n")
+	for name, val := range *cm {
+		var argList []string
+		for v := range val.args {
+			argList = append(argList, util.Yellow.Sprint(strings.TrimSpace(v)))
+		}
+		space := strings.Join(argList, ", ")
+
+		sb.WriteString(util.Red.Sprint(" => ") + util.Green.Sprint(name) + "(" + space + ")" + "\n")
 	}
 
 	return sb.String()

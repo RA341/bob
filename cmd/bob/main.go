@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -18,14 +19,21 @@ func main() {
 	}
 
 	bobFilePath := getBobFilePath(wd)
+	bobWorkingDir := filepath.Dir(bobFilePath)
 	//log.Printf("Bobfile path: %s", bobFilePath)
 
 	var bobFile Bobfile
 	ParseFromFile(&bobFile, bobFilePath)
+	AddDefaultEnvs(&bobFile, bobWorkingDir)
 
 	ctx := context.Background()
+	NewRunner(ctx, &bobFile, bobWorkingDir)
+}
 
-	NewRunner(ctx, &bobFile)
+func AddDefaultEnvs(b *Bobfile, workingDir string) {
+	b.Vars.Add("OS", runtime.GOOS)
+	b.Vars.Add("ARCH", runtime.GOARCH)
+	b.Vars.Add("WorkDir", workingDir)
 }
 
 func getBobFilePath(bobBase string) string {

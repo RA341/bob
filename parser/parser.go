@@ -1,10 +1,12 @@
-package main
+package parser
 
 import (
 	"log"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/RA341/bob/util"
 )
 
 func ParseFromFile(bobFile *Bobfile, bobFilePath string) {
@@ -28,7 +30,6 @@ func ParseFromBytes(bobFile *Bobfile, fBytes []byte) {
 	//fmt.Println("Contents:")
 	for _, line := range lines {
 		//fmt.Printf("line %d: %s\n", i, line.content)
-
 		parseLine(bobFile, line)
 	}
 
@@ -121,9 +122,8 @@ func parseCmd(b *Bobfile, line CleanLine) bool {
 	bodySet := false
 
 	retVal := ""
-	UNUSED(retVal)
-
 	returnTypeSet := false
+	util.UNUSED(retVal)
 
 	acc := ""
 	for _, l := range line.content {
@@ -186,7 +186,7 @@ func parseCmd(b *Bobfile, line CleanLine) bool {
 		log.Fatalf("Could not find cmd %s, THIS SHOULD NEVER HAPPEN", cmdName)
 	}
 
-	cmd.args = convertTokToArgs(args)
+	cmd.args = convertArgs(args)
 	cmd.tasks, cmd.vars = convertBodyToTasks(body)
 	cmd.name = cmdName
 	b.Cmds[cmdName] = cmd
@@ -213,7 +213,6 @@ func convertBodyToTasks(body string) ([]Task, VarMap) {
 			}
 
 			varMap.Add(key, val)
-
 			continue
 		}
 
@@ -229,33 +228,35 @@ func cleanLine(spl string) string {
 	return strings.Trim(strings.TrimSpace(spl), "\n")
 }
 
-func convertTokToArgs(rawArgs string) map[string]Arg {
+func convertArgs(rawArgs string) map[string]Arg {
 	args := make(map[string]Arg)
 	if rawArgs == "" {
 		return args
 	}
 
-	// in: user: str!, \notherP: sd,
+	/*cases
+	// valid
+		<no args>
+		user!
+		user=default
+
+	// invalid
+		user!=default (cannot be required with default val)
+	*/
+
 	split := strings.Split(rawArgs, ",")
 	for _, arg := range split {
+		arg = cleanLine(arg)
 		if arg == "" {
 			continue
 		}
 
 		var ar Arg
-
-		arg = cleanLine(arg)
 		defV := strings.Split(arg, "=")
 
-		// has default
-		if len(defV) > 1 {
-			ar.defaultVal = cleanLine(defV[1])
-		}
-
 		segs := strings.Split(defV[0], ":")
-
 		// does not have type info
-		// [user]
+		// user
 		if len(segs) > 0 {
 			argName := segs[0]
 			if _, ok := args[argName]; ok {
@@ -275,6 +276,11 @@ func convertTokToArgs(rawArgs string) map[string]Arg {
 				strings.TrimSpace(at),
 				"!",
 			)
+		}
+
+		// has default val
+		if len(defV) > 1 {
+			ar.defaultVal = cleanLine(defV[1])
 		}
 
 		args[ar.name] = ar

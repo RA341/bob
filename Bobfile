@@ -17,14 +17,36 @@ size(out=.build/dev) {
 }
 
 @tes = wow
-bd(out=.build/dev) {
+bd(out=./dev) {
     // @tes = kill me
-    //clear
-    go build -o ${out}
+    clear
+    go build -v -o ${out}
     print(${tes})
-
     //./${out}
+
     // ./dev hello2 user=lmao
+}
+
+@test=wow
+
+os(){
+    if @OS == linux {
+      print(Linux time baby ${ARCH})2
+    }
+
+    @test=lol
+
+    print(${OS})
+}
+
+ls () {
+    ls -lah
+    workdir(.build)
+    ls -lah
+    workdir(.git)
+    ls -lah
+    workdir()
+    ls -lah
 }
 
 install(){
