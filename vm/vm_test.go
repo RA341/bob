@@ -171,7 +171,7 @@ func TestVm_If(t *testing.T) {
 
 	run(vm, input)
 	val = vm.stack.MustPop()
-	require.Equal(t, NotEq, val.Raw)
+	require.Equal(t, eq, val.Raw)
 }
 
 func run(vm *VM, input []Ins) {
