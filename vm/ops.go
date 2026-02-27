@@ -1,6 +1,10 @@
 package vm
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 //go:generate go run github.com/dmarkham/enumer@latest -type=OpType -output=gen_enum_op.go
 type OpType int
@@ -43,9 +47,9 @@ const (
 type ValueType int
 
 const (
-	VTInt ValueType = iota
+	VTString ValueType = iota
+	VTInt
 	VTFloat
-	VTString
 	VTBool
 )
 
@@ -70,10 +74,22 @@ type Value struct {
 	Raw  string // keep raw for display/storage
 }
 
+func (i Value) String() string {
+	return fmt.Sprintf(
+		"[%s] %s",
+		strings.TrimSuffix(strings.TrimPrefix(i.Type.String(), "VT"), "ing"),
+		i.Raw,
+	)
+}
+
 // Ins Reprints a single instruction
 type Ins struct {
 	OpType OpType
 	Value  Value
+}
+
+func (i Ins) String() string {
+	return fmt.Sprintf("[%s] %v", i.OpType.String(), i.Value)
 }
 
 // O loads an op with only an op (represents a no value op)
@@ -82,10 +98,10 @@ func O(op OpType) Ins {
 }
 
 // OV inits an instruction with op and val
-func OV(op OpType, valType ValueType, val string) Ins {
+func OV(op OpType, val Value) Ins {
 	return Ins{
 		OpType: op,
-		Value:  NewValue(valType, val),
+		Value:  val,
 	}
 }
 

@@ -109,7 +109,7 @@ func run(vm *VM, input []Ins) {
 	fmt.Println()
 	fmt.Println("=================================")
 
-	fmt.Println("Vars", vm.vars)
+	fmt.Println("Vars", vm.Vars)
 	fmt.Println("=================================")
 	fmt.Println("Stack", vm.stack)
 	fmt.Println("=================================")

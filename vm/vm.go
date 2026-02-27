@@ -36,8 +36,8 @@ type VM struct {
 	callStack Stack[int]
 	labels    map[string]int
 
-	builtins map[string]FnDef
-	vars     map[string]Value
+	Builtins map[string]FnDef
+	Vars     map[string]Value
 	pc       int
 }
 
@@ -46,8 +46,12 @@ func (vm *VM) Start(ins []Ins, funcs map[string]FnDef) {
 	vm.pc = 0
 	vm.labels = make(map[string]int)
 
-	vm.vars = make(map[string]Value)
-	vm.builtins = funcs
+	vm.Vars = make(map[string]Value)
+
+	vm.Builtins = funcs
+	if funcs == nil {
+		vm.Builtins = make(map[string]FnDef)
+	}
 
 	vm.Run()
 }
@@ -80,6 +84,7 @@ func (vm *VM) Run() {
 }
 
 func (vm *VM) executeInstruction(ins *Ins) bool {
+
 	switch ins.OpType {
 	case PUSH:
 		vm.stack.Push(ins.Value)
@@ -88,7 +93,7 @@ func (vm *VM) executeInstruction(ins *Ins) bool {
 	case CALL:
 		vm.Call(ins)
 	case LOAD:
-		val, ok := vm.vars[ins.Value.Raw]
+		val, ok := vm.Vars[ins.Value.Raw]
 		if !ok {
 			log.Fatal("Could not find variable ", ins.Value.Raw)
 		}
@@ -207,13 +212,13 @@ func (vm *VM) popAssert(vt ValueType) Value {
 func (vm *VM) Store() {
 	varName := vm.stack.MustPop()
 	varVal := vm.stack.MustPop()
-	vm.vars[varName.Raw] = varVal
+	vm.Vars[varName.Raw] = varVal
 }
 
 func (vm *VM) Call(ins *Ins) {
 	fnName := vm.stack.MustPop()
 
-	fnDef, ok := vm.builtins[fnName.Raw]
+	fnDef, ok := vm.Builtins[fnName.Raw]
 	if !ok {
 		log.Fatal(red.Sprintf("no function found with name name: %q", fnName))
 	}

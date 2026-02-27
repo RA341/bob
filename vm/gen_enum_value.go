@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ValueTypeName = "VTIntVTFloatVTStringVTBool"
+const _ValueTypeName = "VTStringVTIntVTFloatVTBool"
 
-var _ValueTypeIndex = [...]uint8{0, 5, 12, 20, 26}
+var _ValueTypeIndex = [...]uint8{0, 8, 13, 20, 26}
 
-const _ValueTypeLowerName = "vtintvtfloatvtstringvtbool"
+const _ValueTypeLowerName = "vtstringvtintvtfloatvtbool"
 
 func (i ValueType) String() string {
 	if i < 0 || i >= ValueType(len(_ValueTypeIndex)-1) {
@@ -24,29 +24,29 @@ func (i ValueType) String() string {
 // Re-run the stringer command to generate them again.
 func _ValueTypeNoOp() {
 	var x [1]struct{}
-	_ = x[VTInt-(0)]
-	_ = x[VTFloat-(1)]
-	_ = x[VTString-(2)]
+	_ = x[VTString-(0)]
+	_ = x[VTInt-(1)]
+	_ = x[VTFloat-(2)]
 	_ = x[VTBool-(3)]
 }
 
-var _ValueTypeValues = []ValueType{VTInt, VTFloat, VTString, VTBool}
+var _ValueTypeValues = []ValueType{VTString, VTInt, VTFloat, VTBool}
 
 var _ValueTypeNameToValueMap = map[string]ValueType{
-	_ValueTypeName[0:5]:        VTInt,
-	_ValueTypeLowerName[0:5]:   VTInt,
-	_ValueTypeName[5:12]:       VTFloat,
-	_ValueTypeLowerName[5:12]:  VTFloat,
-	_ValueTypeName[12:20]:      VTString,
-	_ValueTypeLowerName[12:20]: VTString,
+	_ValueTypeName[0:8]:        VTString,
+	_ValueTypeLowerName[0:8]:   VTString,
+	_ValueTypeName[8:13]:       VTInt,
+	_ValueTypeLowerName[8:13]:  VTInt,
+	_ValueTypeName[13:20]:      VTFloat,
+	_ValueTypeLowerName[13:20]: VTFloat,
 	_ValueTypeName[20:26]:      VTBool,
 	_ValueTypeLowerName[20:26]: VTBool,
 }
 
 var _ValueTypeNames = []string{
-	_ValueTypeName[0:5],
-	_ValueTypeName[5:12],
-	_ValueTypeName[12:20],
+	_ValueTypeName[0:8],
+	_ValueTypeName[8:13],
+	_ValueTypeName[13:20],
 	_ValueTypeName[20:26],
 }
 

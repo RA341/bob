@@ -4,14 +4,56 @@ import (
 	"testing"
 
 	"github.com/RA341/bob/util"
+	"github.com/RA341/bob/vm"
+	"github.com/stretchr/testify/require"
 )
+
+func TestParser_global_var(t *testing.T) {
+	bobFile := `
+	@someVar = value
+	@someVar2 = value
+	@someInt: VTInt = 0
+	@someExpr = (@someVar2+@someVar)
+`
+	var bd Bobfile
+	err := NewBobFileFromBytes(&bd, []byte(bobFile))
+	require.NoError(t, err)
+
+	vmm := new(vm.VM)
+	get := bd.Program.Get()
+	bd.Program.Print()
+
+	vmm.Start(get, nil)
+
+	val, ok := vmm.Vars["someVar"]
+	require.True(t, ok)
+	require.Equal(t, vm.VTString, val.Type)
+	require.Equal(t, "value", val.Raw)
+
+	val, ok = vmm.Vars["someVar2"]
+	require.True(t, ok)
+	require.Equal(t, vm.VTString, val.Type)
+	require.Equal(t, "value", val.Raw)
+
+	val, ok = vmm.Vars["someInt"]
+	require.True(t, ok)
+	require.Equal(t, vm.VTInt, val.Type)
+	require.Equal(t, "0", val.Raw)
+
+	val, ok = vmm.Vars["someExpr"]
+	require.True(t, ok)
+	require.Equal(t, vm.VTString, val.Type)
+	require.Equal(t, "valuevalue"+
+		"", val.Raw)
+}
 
 func TestParser_Hello_world(t *testing.T) {
 	bobFile := `hello() {
     	print("hello world")
 	}`
 	var bd Bobfile
-	ParseFromBytes(&bd, []byte(bobFile))
+	err := NewBobFileFromBytes(&bd, []byte(bobFile))
+	require.NoError(t, err)
 }
 
 var con = `

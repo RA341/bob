@@ -63,17 +63,3 @@ func (m *VarMap) Add(key, val string) {
 	}
 	(*m)[key] = val
 }
-
-type Bobfile struct {
-	Version int
-	Cmds    CommandMap
-	Vars    VarMap
-}
-
-func (p Bobfile) String() string {
-	return fmt.Sprintf(
-		"Bobfile{Version: %v, Vars: %v}",
-		p.Version,
-		p.Vars,
-	)
-}
