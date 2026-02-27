@@ -1,7 +1,6 @@
 package vm
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -103,18 +102,90 @@ func TestVm2(t *testing.T) {
 	run(vm, input)
 }
 
+func TestVm_If(t *testing.T) {
+	vm := new(VM)
+
+	NotEq := "value is not equal"
+	eq := "value is equal"
+
+	input := []Ins{
+		OVBool(PUSH, true),
+
+		OVStr(JNZ, "else"),
+		OVStr(PUSH, eq),
+		OVStr(JMP, "if_end"),
+
+		OVStr(LABEL, "else"),
+		OVStr(PUSH, NotEq),
+		OVStr(LABEL, "if_end"),
+
+		O(HALT),
+	}
+
+	run(vm, input)
+
+	val := vm.stack.MustPop()
+	require.Equal(t, eq, val.Raw)
+
+	input = []Ins{
+		OVBool(PUSH, false),
+
+		OVStr(JNZ, "else"),
+		OVStr(PUSH, eq),
+		OVStr(JMP, "if_end"),
+
+		OVStr(LABEL, "else"),
+		OVStr(PUSH, NotEq),
+		OVStr(LABEL, "if_end"),
+
+		O(HALT),
+	}
+
+	run(vm, input)
+	val = vm.stack.MustPop()
+	require.Equal(t, NotEq, val.Raw)
+
+	input = []Ins{
+		OVStr(PUSH, "someValue"),
+		OVStr(PUSH, "@value"),
+		O(STORE),
+
+		OVStr(PUSH, "someValue"),
+		OVStr(PUSH, "@value2"),
+		O(STORE),
+
+		OVStr(LOAD, "@value2"),
+		OVStr(LOAD, "@value"),
+		O(EQ),
+
+		OVStr(JNZ, "else"),
+		OVStr(PUSH, eq),
+		OVStr(JMP, "if_end"),
+
+		OVStr(LABEL, "else"),
+		OVStr(PUSH, NotEq),
+		OVStr(LABEL, "if_end"),
+
+		O(HALT),
+	}
+
+	run(vm, input)
+	val = vm.stack.MustPop()
+	require.Equal(t, NotEq, val.Raw)
+}
+
 func run(vm *VM, input []Ins) {
 	vm.Start(input, DefaultFns)
 
-	fmt.Println()
-	fmt.Println("=================================")
-
-	fmt.Println("Vars", vm.Vars)
-	fmt.Println("=================================")
-	fmt.Println("Stack", vm.stack)
-	fmt.Println("=================================")
-	fmt.Println("Program", vm.program)
-
-	fmt.Println()
-	fmt.Println("=================================")
+	//	fmt.Println()
+	//	fmt.Println("=================================")
+	//
+	//	fmt.Println("Vars", vm.Vars)
+	//	fmt.Println("=================================")
+	//	fmt.Println("Stack", vm.stack)
+	//	fmt.Println("=================================")
+	//	fmt.Println("Program", vm.program)
+	//
+	//	fmt.Println()
+	//	fmt.Println("=================================")
 }

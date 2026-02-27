@@ -84,7 +84,6 @@ func (vm *VM) Run() {
 }
 
 func (vm *VM) executeInstruction(ins *Ins) bool {
-
 	switch ins.OpType {
 	case PUSH:
 		vm.stack.Push(ins.Value)
@@ -101,12 +100,7 @@ func (vm *VM) executeInstruction(ins *Ins) bool {
 	case ADD:
 		vm.Add()
 	case LABEL:
-		labelStart, ok := vm.labels[ins.Value.Raw]
-		if !ok {
-			log.Fatalf("label '%q' does not exist", ins.Value.Raw)
-		}
-		vm.callStack.Push(vm.pc)
-		vm.pc = labelStart
+		// no op only indicate body of the next instruction
 	case JZ:
 		val := vm.mustPopBool()
 		if val {

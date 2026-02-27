@@ -1,6 +1,9 @@
 package vm
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Program struct {
 	input []Ins
@@ -10,11 +13,20 @@ func (p *Program) Get() []Ins {
 	return p.input
 }
 
+func (p *Program) String() string {
+	var sb strings.Builder
+
+	for _, in := range p.input {
+		sb.WriteString(in.String() + "\n")
+	}
+
+	return sb.String()
+}
+
 func (p *Program) Print() {
 	for _, in := range p.input {
 		fmt.Println(in)
 	}
-
 }
 
 func (p *Program) AddGlobalVar(name string, value Value) {
