@@ -1,11 +1,10 @@
 package main
 
 import (
-	"context"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -13,6 +12,11 @@ import (
 const BobFileName = "Bobfile"
 
 func main() {
+	//ctx := context.Background()
+	//NewRunner(ctx, &bobFile, bobWorkingDir)
+	fmt.Print("this is the bob task runner, it is a work in progress goodbye")
+	os.Exit(0)
+
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Failed to get current working directory: %v", err)
@@ -22,18 +26,16 @@ func main() {
 	bobWorkingDir := filepath.Dir(bobFilePath)
 	//log.Printf("Bobfile path: %s", bobFilePath)
 
-	var bobFile Bobfile
-	ParseFromFile(&bobFile, bobFilePath)
-	AddDefaultEnvs(&bobFile, bobWorkingDir)
+	//var bobFile Bobfile
+	//ParseFromFile(&bobFile, bobFilePath)
+	AddDefaultEnvs(bobWorkingDir)
 
-	ctx := context.Background()
-	NewRunner(ctx, &bobFile, bobWorkingDir)
 }
 
-func AddDefaultEnvs(b *Bobfile, workingDir string) {
-	b.Vars.Add("OS", runtime.GOOS)
-	b.Vars.Add("ARCH", runtime.GOARCH)
-	b.Vars.Add("WorkDir", workingDir)
+func AddDefaultEnvs(workingDir string) {
+	//b.Vars.Add("OS", runtime.GOOS)
+	//b.Vars.Add("ARCH", runtime.GOARCH)
+	//b.Vars.Add("WorkDir", workingDir)
 }
 
 func getBobFilePath(bobBase string) string {
