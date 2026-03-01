@@ -14,7 +14,7 @@ Out of the way
 
 ## Features
 
--[ ] Conditionals
+- [ ] Conditionals
     - [ ] If
     - [ ] Else
     - [ ] Loops
