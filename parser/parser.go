@@ -39,7 +39,7 @@ func NewBobFileFromBytes(bob *Bobfile, fBytes []byte) error {
 	contents := string(fBytes)
 	contents = strings.TrimSpace(contents)
 
-	lines := bob.splitAndStrip(contents)
+	lines := splitAndStrip(contents)
 
 	bob.Cmds = make(map[string]Cmd)
 
@@ -77,22 +77,30 @@ func (b *Bobfile) parseLine(line CleanLine) error {
 }
 
 func (b *Bobfile) parseGlobalVar(line CleanLine) (bool, error) {
-	if isInsideBraces(line.content, VarPrefix) {
-		// this is a local var
+	//if isInsideBraces(line.content, VarPrefix) {
+	//	// this is a local var
+	//	return false, nil
+	//}
+
+	if !isVar(line.content) {
 		return false, nil
 	}
-	return b.parseVar(&line)
+
+	ins, err := b.parseVar(line.content)
+	b.Program.Add(ins...)
+
+	return true, err
 }
 
 func (b *Bobfile) parseVar(line string) (ins []vm.Ins, err error) {
 	if !isVar(line) {
-		return false, nil
+		return nil, nil
 	}
 
 	line = strings.TrimPrefix(line, VarPrefix)
 	split := strings.Split(line, "=")
 	if len(split) < 2 {
-		return false, nil
+		return nil, nil
 	}
 
 	// Left side of "=" is "key" or "key:type"
@@ -104,8 +112,8 @@ func (b *Bobfile) parseVar(line string) (ins []vm.Ins, err error) {
 		// has a type def
 		typeName, err = vm.ValueTypeString(strings.TrimSpace(argNameSplit[1]))
 		if err != nil {
-			return false, fmt.Errorf(
-				"invalid type name %q must be one of %v\nLine [%d]: %q",
+			return nil, fmt.Errorf(
+				"invalid type name %q must be one of %v\n: %q",
 				argNameSplit[1],
 				vm.ValueTypeValues(),
 				line,
@@ -116,7 +124,7 @@ func (b *Bobfile) parseVar(line string) (ins []vm.Ins, err error) {
 	// Right side of "=" is the value
 	val := strings.TrimSpace(split[1])
 	if val == "" {
-		return false, fmt.Errorf("empty value: %q", line)
+		return nil, fmt.Errorf("empty value: %q", line)
 	}
 
 	values := toPostfix(val)
@@ -137,89 +145,13 @@ func (b *Bobfile) parseVar(line string) (ins []vm.Ins, err error) {
 			}
 		}
 
-		b.Program.AddGlobalExpr(
+		return vm.AddExpr(
 			key,
 			expr...,
-		)
-	} else {
-		b.Program.AddGlobalVar(
-			key,
-			vm.NewValue(typeName, val),
-		)
+		), nil
 	}
 
-	return true, nil
-}
-
-func tokenize(s string) []string {
-	var tokens []string
-	var current strings.Builder
-
-	for _, ch := range s {
-		switch ch {
-		case '+', '-', '*', '/', '(', ')':
-			if current.Len() > 0 {
-				tokens = append(tokens, strings.TrimSpace(current.String()))
-				current.Reset()
-			}
-			tokens = append(tokens, string(ch))
-		case ' ':
-			// skip
-		default:
-			current.WriteRune(ch)
-		}
-	}
-	if current.Len() > 0 {
-		tokens = append(tokens, strings.TrimSpace(current.String()))
-	}
-	return tokens
-}
-
-func toPostfix(s string) []string {
-	var output []string
-	var ops []string
-
-	precedence := map[string]int{
-		"+": 1, "-": 1,
-		"*": 2, "/": 2,
-	}
-
-	tokens := tokenize(s)
-
-	for _, tok := range tokens {
-		switch tok {
-		case "+", "-", "*", "/":
-			for len(ops) > 0 {
-				top := ops[len(ops)-1]
-				if top != "(" && precedence[top] >= precedence[tok] {
-					output = append(output, top)
-					ops = ops[:len(ops)-1]
-				} else {
-					break
-				}
-			}
-			ops = append(ops, tok)
-		case "(":
-			ops = append(ops, tok)
-		case ")":
-			for len(ops) > 0 && ops[len(ops)-1] != "(" {
-				output = append(output, ops[len(ops)-1])
-				ops = ops[:len(ops)-1]
-			}
-			if len(ops) > 0 {
-				ops = ops[:len(ops)-1] // pop the "("
-			}
-		default:
-			output = append(output, tok)
-		}
-	}
-
-	for len(ops) > 0 {
-		output = append(output, ops[len(ops)-1])
-		ops = ops[:len(ops)-1]
-	}
-
-	return output
+	return vm.AddVar(key, vm.NewValue(typeName, val)), nil
 }
 
 func (b *Bobfile) parseCmd(line CleanLine) bool {
@@ -232,6 +164,7 @@ func (b *Bobfile) parseCmd(line CleanLine) bool {
 
 	cmdName := ""
 	args := ""
+	util.UNUSED(args)
 	argSet := false
 
 	body := ""
@@ -302,9 +235,13 @@ func (b *Bobfile) parseCmd(line CleanLine) bool {
 		log.Fatalf("Could not find cmd %s, THIS SHOULD NEVER HAPPEN", cmdName)
 	}
 
-	cmd.args = b.convertArgs(args)
-	cmd.tasks, cmd.vars = b.convertBody(body)
-	cmd.name = cmdName
+	// todo args
+	//cmd.args = b.convertArgs(args)
+	bodyIns := b.convertBody(body)
+
+	b.Program.Add(vm.OVStr(vm.LABEL, cmdName))
+	b.Program.Add(bodyIns...)
+
 	b.Cmds[cmdName] = cmd
 
 	return true
@@ -377,10 +314,7 @@ func (b *Bobfile) convertArgs(rawArgs string) map[string]Arg {
 	return args
 }
 
-func (b *Bobfile) convertBody(body string) ([]Task, VarMap) {
-	var tasks []Task
-	var varMap = VarMap{}
-
+func (b *Bobfile) convertBody(body string) []vm.Ins {
 	var ins []vm.Ins
 
 	for _, s := range strings.Split(body, "\n") {
@@ -391,7 +325,7 @@ func (b *Bobfile) convertBody(body string) ([]Task, VarMap) {
 
 		switch {
 		case isFn(cleanCmd):
-
+			ins = append(ins, b.parseBody(cleanCmd)...)
 		case isVar(cleanCmd):
 			varInitIns, err := b.parseVar(cleanCmd)
 			if err != nil {
@@ -405,15 +339,58 @@ func (b *Bobfile) convertBody(body string) ([]Task, VarMap) {
 			)
 		}
 
-		ts.cmd = cleanCmd
-		tasks = append(tasks, ts)
+		//ts.cmd = cleanCmd
+		//tasks = append(tasks, ts)
 	}
 
-	return tasks, varMap
+	return ins
 }
 
-func isFn(cmd string) bool {
+func (b *Bobfile) parseBody(cleanCmd string) []vm.Ins {
+	var ins []vm.Ins
 
+	splits := strings.SplitN(cleanCmd, "(", 2)
+	fnName := splits[0]
+	if len(splits) > 1 {
+		clean := strings.TrimSuffix(splits[1], ")")
+
+		quoteC := 0
+		var args []string
+		var sb strings.Builder
+		for _, c := range clean {
+			stcC := string(c)
+
+			switch {
+			case stcC == `"`:
+				if quoteC == 1 {
+					quoteC = 0
+				} else {
+					quoteC++
+				}
+			case c == ',' && quoteC == 0:
+				args = append(args, strings.TrimSpace(sb.String()))
+				sb.Reset()
+			default:
+				sb.WriteString(stcC)
+			}
+		}
+		// todo refactor kinda duplicate dont like it
+		// also the space is getting removed from the quotes fix
+		args = append(args, strings.TrimSpace(sb.String()))
+
+		for i := len(args) - 1; i >= 0; i-- {
+			ins = append(ins, vm.OVStr(vm.PUSH, args[i]))
+		}
+
+		ins = append(ins, vm.OVInt(vm.PUSH, len(args)))
+	}
+
+	return append(ins, vm.AddFnCall(fnName, false)...)
+}
+
+// function calls start with a valid English alpha and end with ')'
+func isFn(line string) bool {
+	return strings.HasSuffix(line, ")") && isAlpha("")
 }
 
 func (b *Bobfile) parseVersion(line CleanLine) (bool, error) {
@@ -436,62 +413,76 @@ func (b *Bobfile) parseVersion(line CleanLine) (bool, error) {
 	return true, nil
 }
 
-type CleanLine struct {
-	lineNum int
-	content string
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// utils
+
+func tokenize(s string) []string {
+	var tokens []string
+	var current strings.Builder
+
+	for _, ch := range s {
+		switch ch {
+		case '+', '-', '*', '/', '(', ')':
+			if current.Len() > 0 {
+				tokens = append(tokens, strings.TrimSpace(current.String()))
+				current.Reset()
+			}
+			tokens = append(tokens, string(ch))
+		case ' ':
+			// skip
+		default:
+			current.WriteRune(ch)
+		}
+	}
+	if current.Len() > 0 {
+		tokens = append(tokens, strings.TrimSpace(current.String()))
+	}
+	return tokens
 }
 
-func (b *Bobfile) splitAndStrip(contents string) []CleanLine {
-	var cleanLines []CleanLine
+func toPostfix(s string) []string {
+	var output []string
+	var ops []string
 
-	if !strings.HasSuffix(contents, "\n") {
-		contents += "\n"
+	precedence := map[string]int{
+		"+": 1, "-": 1,
+		"*": 2, "/": 2,
 	}
 
-	acc := ""
-	curlyParen := 0
-	roundParen := 0
+	tokens := tokenize(s)
 
-	line := 0
-	for _, ch := range contents {
-		s := string(ch)
-
-		switch s {
-		case "{":
-			curlyParen++
-		case "}":
-			curlyParen--
-		case "(":
-			roundParen++
-		case ")":
-			roundParen--
-		}
-
-		if s == "\n" {
-			line++
-			a := strings.TrimSpace(acc)
-
-			if strings.HasPrefix(a, "//") {
-				continue
-			}
-
-			// all scopes are closed
-			if curlyParen == 0 && roundParen == 0 {
-				if a != "" {
-					//fmt.Printf("%d: %q\n", line, a)
-					cleanLines = append(cleanLines, CleanLine{line, a})
+	for _, tok := range tokens {
+		switch tok {
+		case "+", "-", "*", "/":
+			for len(ops) > 0 {
+				top := ops[len(ops)-1]
+				if top != "(" && precedence[top] >= precedence[tok] {
+					output = append(output, top)
+					ops = ops[:len(ops)-1]
+				} else {
+					break
 				}
-				acc = ""
-				continue
 			}
+			ops = append(ops, tok)
+		case "(":
+			ops = append(ops, tok)
+		case ")":
+			for len(ops) > 0 && ops[len(ops)-1] != "(" {
+				output = append(output, ops[len(ops)-1])
+				ops = ops[:len(ops)-1]
+			}
+			if len(ops) > 0 {
+				ops = ops[:len(ops)-1] // pop the "("
+			}
+		default:
+			output = append(output, tok)
 		}
-
-		acc += s
 	}
 
-	if curlyParen != 0 || roundParen != 0 {
-		log.Fatalf("Unclosed scope ")
+	for len(ops) > 0 {
+		output = append(output, ops[len(ops)-1])
+		ops = ops[:len(ops)-1]
 	}
 
-	return cleanLines
+	return output
 }

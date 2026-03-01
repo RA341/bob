@@ -90,7 +90,7 @@ func (vm *VM) executeInstruction(ins *Ins) bool {
 	case STORE:
 		vm.Store()
 	case CALL:
-		vm.Call(ins)
+		vm.Call()
 	case LOAD:
 		val, ok := vm.Vars[ins.Value.Raw]
 		if !ok {
@@ -209,7 +209,7 @@ func (vm *VM) Store() {
 	vm.Vars[varName.Raw] = varVal
 }
 
-func (vm *VM) Call(ins *Ins) {
+func (vm *VM) Call() {
 	fnName := vm.stack.MustPop()
 
 	fnDef, ok := vm.Builtins[fnName.Raw]
@@ -217,23 +217,18 @@ func (vm *VM) Call(ins *Ins) {
 		log.Fatal(red.Sprintf("no function found with name name: %q", fnName))
 	}
 
-	argCount := fnDef.ArgCount
-
-	var err error
-	if argCount == VariadicArgCount {
-		varCountStr := ins.Value.Raw
-		argCount, err = strconv.Atoi(varCountStr)
-		if err != nil {
-			log.Fatal(
-				red.Sprintf(
-					"invalid variadic count: %s\n"+
-						"err: %v\n"+
-						"This function is variadic and a explicit variable count IS REQUIRED",
-					varCountStr,
-					err,
-				),
-			)
-		}
+	varCountStr := vm.stack.MustPop()
+	argCount, err := strconv.Atoi(varCountStr.Raw)
+	if err != nil {
+		log.Fatal(
+			red.Sprintf(
+				"invalid variadic count: %s\n"+
+					"err: %v\n"+
+					"This function is variadic and a explicit variable count IS REQUIRED",
+				varCountStr,
+				err,
+			),
+		)
 	}
 
 	args := make([]string, argCount)

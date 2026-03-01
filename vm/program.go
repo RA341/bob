@@ -29,31 +29,62 @@ func (p *Program) Print() {
 	}
 }
 
-func (p *Program) AddGlobalVar(name string, value Value) {
-	varLoad := []Ins{
+func (p *Program) Add(ins ...Ins) {
+	p.input = append(p.input, ins...)
+}
+
+// AddExpr assigns a variable a value
+func AddExpr(varName string, expr ...Ins) []Ins {
+	return append(
+		expr,
+		[]Ins{
+			OVStr(PUSH, varName),
+			O(STORE),
+		}...,
+	)
+}
+
+// AddVar instructions to register a var
+func AddVar(name string, value Value) []Ins {
+	return []Ins{
 		OV(PUSH, value),
 		OVStr(PUSH, name),
 		O(STORE),
 	}
-
-	p.input = append(p.input, varLoad...)
 }
 
-// GetVarIns generates instructions to get a var
-func (p *Program) GetVarIns(name string) []Ins {
+// LoadVar generates instructions to get a var
+func LoadVar(name string) []Ins {
 	return []Ins{
 		OVStr(LOAD, name),
 	}
 }
 
-func (p *Program) AddGlobalExpr(name string, value ...Ins) {
-	varLoad := append(
-		value,
-		[]Ins{
-			OVStr(PUSH, name),
-			O(STORE),
-		}...,
-	)
+func AddFnCall(name string, variadic bool, args ...Value) []Ins {
+	var argIns []Ins
+	for _, arg := range args {
+		argIns = append(
+			argIns,
+			OV(PUSH, arg),
+		)
+	}
 
-	p.input = append(p.input, varLoad...)
+	var fnCall = []Ins{
+		OVStr(PUSH, name),
+		O(CALL),
+	}
+
+	if variadic {
+		fnCall = append(
+			[]Ins{
+				OVInt(PUSH, len(args)),
+			},
+			fnCall...,
+		)
+	}
+
+	return append(
+		argIns,
+		fnCall...,
+	)
 }

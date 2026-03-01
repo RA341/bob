@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/RA341/bob/util"
@@ -47,8 +48,21 @@ func TestParser_global_var(t *testing.T) {
 }
 
 func TestParser_Hello_world(t *testing.T) {
-	bobFile := `hello() {
-    	print("hello world")
+	bobFile := `hello(){
+    	printf("%s, %s", "hello world", "wow")
+	}`
+	var bd Bobfile
+	err := NewBobFileFromBytes(&bd, []byte(bobFile))
+	require.NoError(t, err)
+
+	get := bd.Program.Get()
+	fmt.Println(bd.Program.String())
+
+	vmm := new(vm.VM)
+	vmm.Start(get, vm.DefaultFns)
+
+	bobFile = `hello(){
+    	print(hello world)
 	}
 
 	hello2(){
@@ -56,9 +70,7 @@ func TestParser_Hello_world(t *testing.T) {
 		hello()
 	}
 `
-	var bd Bobfile
-	err := NewBobFileFromBytes(&bd, []byte(bobFile))
-	require.NoError(t, err)
+
 }
 
 var con = `
