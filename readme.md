@@ -17,7 +17,7 @@ Out of the way
 -[ ] Conditionals
     - [ ] If
     - [ ] Else
-    - [ ] Loops 
+    - [ ] Loops
 - [ ] Params
     - [ ] cli args 
     - [ ] optional   
