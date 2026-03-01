@@ -12,26 +12,26 @@ Useful
 
 Out of the way
 
-## Features 
+## Features
 
 -[ ] Conditionals
     - [ ] If
     - [ ] Else
     - [ ] Loops
 - [ ] Params
-    - [ ] cli args 
-    - [ ] optional   
+    - [ ] cli args
+    - [ ] optional
 - [ ] Parallel
 - [ ] Caching
 - [ ] Builtins
-    - [ ] Cmds   
-      - [ ] mk
-      - [ ] rm
-      - [ ] copy
-      - [ ] mv
-      - [ ] workdir
+    - [ ] Cmds
+        - [ ] mk
+        - [ ] rm
+        - [ ] copy
+        - [ ] mv
+        - [ ] workdir
     - [ ] Vars
         - [ ] OS
         - [ ] Workdir
-        - [ ] Home 
+        - [ ] Home
 - [ ] File watching
