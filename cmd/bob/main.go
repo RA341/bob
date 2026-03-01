@@ -1,22 +1,28 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/RA341/bob/cli"
 )
+
+func main() {
+	cmd := cli.New()
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
+		log.Fatal(err)
+	}
+}
 
 // BobFileName todo maybe add lowercase support
 const BobFileName = "Bobfile"
 
-func main() {
+func loadBobFile() {
 	//ctx := context.Background()
 	//NewRunner(ctx, &bobFile, bobWorkingDir)
-	fmt.Print("this is the bob task runner, it is a work in progress goodbye")
-	os.Exit(0)
-
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Failed to get current working directory: %v", err)
@@ -29,7 +35,6 @@ func main() {
 	//var bobFile Bobfile
 	//ParseFromFile(&bobFile, bobFilePath)
 	AddDefaultEnvs(bobWorkingDir)
-
 }
 
 func AddDefaultEnvs(workingDir string) {
