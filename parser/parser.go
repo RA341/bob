@@ -1,6 +1,8 @@
 package parser
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Parser struct {
 	tokens []Token
@@ -32,6 +34,28 @@ func (t *Parser) ParseToken() {
 
 func (t *Parser) Peek() Token {
 	return t.tokens[t.current]
+}
+
+func (t *Parser) Match(tt ...TokenType) bool {
+	for _, ty := range tt {
+		if t.Check(ty) {
+			t.Next()
+			return true
+		}
+	}
+
+	return false
+}
+
+func (t *Parser) Check(tt TokenType) bool {
+	if t.isAtEnd() {
+		return false
+	}
+	return t.Peek().TokenType == tt
+}
+
+func (t *Parser) Prev() Token {
+	return t.tokens[t.current-1]
 }
 
 func (t *Parser) Next() Token {
