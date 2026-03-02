@@ -9,29 +9,44 @@ import (
 type Command interface {
 	Name() string
 	Help() string
-	Run() error
+	Run(args ...string) error
 }
+
 type Cli struct {
-	cmds []Command
+	cmds      []Command
+	flags     []*Flag
+	subCmdIdx int
 }
 
 func Run() {
+	versionFlag := BoolFlag("version", "print version")
 	cli := Cli{
+		flags: []*Flag{
+			versionFlag,
+		},
 		cmds: []Command{
 			&CmdInit{},
 		},
 	}
 
-	if len(os.Args) < 2 {
-		cli.PrintHelp()
+	cleanArgs := os.Args[1:]
+
+	err := cli.ParseFlags(cleanArgs)
+	if err != nil {
+		log.Fatal("Could not parse flags", err)
+	}
+
+	if versionFlag.isSet {
+		cli.Version()
 		return
 	}
 
-	subCommand := os.Args[1]
+	subCommand := cleanArgs[cli.subCmdIdx]
+	subCommandArgs := cleanArgs[cli.subCmdIdx+1:]
 
 	for _, cmd := range cli.cmds {
 		if cmd.Name() == subCommand {
-			err := cmd.Run()
+			err := cmd.Run(subCommandArgs...)
 			if err != nil {
 				log.Fatal(err)
 				return
@@ -54,4 +69,28 @@ func (c *Cli) PrintHelp() {
 		fmt.Println(name)
 	}
 
+}
+
+func (c *Cli) ParseFlags(args []string) error {
+	if len(args) < 1 {
+		c.PrintHelp()
+		return nil
+	}
+
+	argParser := FlagParser{
+		flags: c.flags,
+	}
+	err := argParser.parse(args)
+	if err != nil {
+		return err
+	}
+
+	c.flags = argParser.flags
+	c.subCmdIdx = argParser.current
+
+	return nil
+}
+
+func (c *Cli) Version() {
+	fmt.Println("Bob version: dev")
 }
