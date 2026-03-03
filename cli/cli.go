@@ -3,7 +3,6 @@ package cli
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/RA341/bob/cli/bob"
@@ -40,7 +39,7 @@ func (c *Cli) Run() error {
 
 	nextCmdIdx, err := c.ParseFlags(cleanArgs)
 	if err != nil {
-		log.Fatal("Could not parse flags", err)
+		return fmt.Errorf("failed to parse commands: %w", err)
 	}
 
 	err = c.handleGlobalFlags()
@@ -58,6 +57,7 @@ func (c *Cli) handleGlobalFlags() error {
 		c.Version()
 		return ErrCmdHandled
 	}
+
 	return nil
 }
 
