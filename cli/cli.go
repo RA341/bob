@@ -39,8 +39,8 @@ func NewApp() *Cli {
 	}
 }
 
-func (c *Cli) Run() error {
-	cleanArgs := os.Args[1:]
+func (c *Cli) Run(args []string) error {
+	cleanArgs := args[1:]
 
 	nextCmdIdx, err := c.parseFlags(cleanArgs)
 	if err != nil {
