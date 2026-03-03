@@ -16,8 +16,8 @@ if cond1 == cond2 {
 }
 `
 
-	lex := NewLexer([]byte(content))
+	lex := RunLexer([]byte(content))
 	require.Nil(t, lex.errs)
 
-	NewParser(lex.tokens)
+	RunParser(lex.tokens)
 }

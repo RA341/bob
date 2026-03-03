@@ -5,7 +5,6 @@ go 1.25.0
 require (
 	github.com/fatih/color v1.18.0
 	github.com/stretchr/testify v1.11.1
-	github.com/urfave/cli/v3 v3.6.2
 )
 
 require (

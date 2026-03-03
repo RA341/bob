@@ -2,21 +2,26 @@ package parser
 
 import (
 	"fmt"
+
+	"github.com/RA341/bob/vm"
 )
 
 type Parser struct {
 	tokens []Token
+	errs   []error
 
-	start   int
-	current int
+	start        int
+	current      int
+	instructions []vm.Ins
 }
 
-func NewParser(token []Token) {
+func RunParser(token []Token) *Parser {
 	t := Parser{
 		tokens: token,
 	}
 
 	t.Parse()
+	return &t
 }
 
 func (t *Parser) Parse() {

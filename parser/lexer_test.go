@@ -10,7 +10,7 @@ import (
 func Test_Lex_Basic(t *testing.T) {
 	// basic operators
 	content := `({}) < <= >= > + - * , : ! != ==`
-	lex := NewLexer([]byte(content))
+	lex := RunLexer([]byte(content))
 	expected := []TokenType{
 		LPAREN, LCURLY, RCURLY, RPAREN,
 		Less, LessEqual, GreaterEqual, Greater,
@@ -27,14 +27,14 @@ func Test_Lex_Basic(t *testing.T) {
 
 	// comments
 	content = `//({}) < <= >= > + - * , : ! != ==`
-	lex = NewLexer([]byte(content))
+	lex = RunLexer([]byte(content))
 	expected = []TokenType{EOF}
 	require.Nil(t, lex.errs)
 	require.Equal(t, len(expected), len(lex.tokens))
 
 	// strings
 	content = `"//({}) < <= >= > + - * , : ! != =="`
-	lex = NewLexer([]byte(content))
+	lex = RunLexer([]byte(content))
 	expected = []TokenType{Literal, EOF}
 	require.Nil(t, lex.errs)
 	require.Equal(t, len(expected), len(lex.tokens))
@@ -42,7 +42,7 @@ func Test_Lex_Basic(t *testing.T) {
 	require.Equal(t, content[1:len(content)-1], lex.tokens[0].Literal)
 
 	content = `if for else or and`
-	lex = NewLexer([]byte(content))
+	lex = RunLexer([]byte(content))
 	expected = []TokenType{If, For, Else, Or, And, EOF}
 	require.Nil(t, lex.errs)
 	for i, r := range lex.tokens {
@@ -63,7 +63,7 @@ hello2(
     print(as)
 }`
 
-	lex := NewLexer([]byte(content))
+	lex := RunLexer([]byte(content))
 	require.Nil(t, lex.errs)
 
 	for _, r := range lex.tokens {

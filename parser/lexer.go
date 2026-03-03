@@ -73,7 +73,7 @@ type Lexer struct {
 	line    int
 }
 
-func NewLexer(content []byte) *Lexer {
+func RunLexer(content []byte) *Lexer {
 	lex := Lexer{
 		contents: content,
 		line:     1,
