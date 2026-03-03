@@ -1,0 +1,26 @@
+program = statement * EOF ;
+
+statement = exprStmt |
+            printStmt ;
+
+expression = assignment ;
+
+assignment = IDENTIFIER "=" assignment | equality ;
+
+exprStmt = expression ";" ;
+
+printStmt = "print" expression ";" ;
+
+
+expression = literal | unary | binary | grouping ;
+
+literal = NUMBER | STRING | "true" | "false" | "nil" ;
+
+grouping = "(" expression ")" ;
+
+unary = ( "-" | "!" ) expression ;
+
+binary = expression operator expression ;
+
+operator = "==" | "!=" | "<" | "<=" | ">" | ">=" |
+           "+"  | "-"  | "*" | "/" ;

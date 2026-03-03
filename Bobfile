@@ -1,12 +1,12 @@
-version: 1
+version := 1
 
-@as = aasdasd
+as := aasdasd
 
-hello() {
+fn hello() {
     print("hello world")
 }
 
-helloUser(user!) {
+fn helloUser(user!) {
     workdir(.build)
     print(hello ${user})
     git status
