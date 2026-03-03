@@ -12,7 +12,7 @@ package parser
 //)
 //
 //type Bobfile struct {
-//	Version int
+//	version int
 //	Cmds    CommandMap
 //
 //	Program vm.Program
@@ -20,8 +20,8 @@ package parser
 //
 //func (b *Bobfile) String() string {
 //	return fmt.Sprintf(
-//		"Bobfile{Version: %v, Vars: %v}",
-//		b.Version,
+//		"Bobfile{version: %v, Vars: %v}",
+//		b.version,
 //		b.Program,
 //	)
 //}
@@ -409,7 +409,7 @@ package parser
 //		return false, fmt.Errorf("could not convert version to int, %s, %s, %v", line.content, s, err)
 //	}
 //
-//	b.Version = atoi
+//	b.version = atoi
 //	return true, nil
 //}
 //
