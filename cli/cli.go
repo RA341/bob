@@ -1,61 +1,89 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/RA341/bob/cli/bob"
+	"github.com/RA341/bob/cli/commands"
+	"github.com/RA341/bob/cli/flag"
 )
 
 type Command interface {
 	Name() string
 	Help() string
-	Run(args ...string) error
+	Run() error
+	LoadFlags(args []string) (err error)
 }
 
 type Cli struct {
 	cmds      []Command
-	flags     []*Flag
+	flags     []*flag.Flag
 	subCmdIdx int
 }
 
-func Run() {
-	versionFlag := BoolFlag("version", "print version")
-	cli := Cli{
-		flags: []*Flag{
-			versionFlag,
+func NewApp() *Cli {
+	return &Cli{
+		flags: []*flag.Flag{
+			flag.Bool("version", "print version"),
 		},
 		cmds: []Command{
-			&CmdInit{},
+			new(commands.Init),
 		},
 	}
+}
 
+func (c *Cli) Run() error {
 	cleanArgs := os.Args[1:]
 
-	err := cli.ParseFlags(cleanArgs)
+	nextCmdIdx, err := c.ParseFlags(cleanArgs)
 	if err != nil {
 		log.Fatal("Could not parse flags", err)
 	}
 
-	if versionFlag.isSet {
-		cli.Version()
-		return
+	err = c.handleGlobalFlags()
+	if err != nil && !errors.Is(err, ErrCmdHandled) {
+		return err
 	}
 
-	subCommand := cleanArgs[cli.subCmdIdx]
-	subCommandArgs := cleanArgs[cli.subCmdIdx+1:]
+	cleanArgs = cleanArgs[nextCmdIdx:]
 
-	for _, cmd := range cli.cmds {
-		if cmd.Name() == subCommand {
-			err := cmd.Run(subCommandArgs...)
-			if err != nil {
-				log.Fatal(err)
-				return
-			}
-			return
+	return c.runSubCmd(cleanArgs)
+}
+
+func (c *Cli) handleGlobalFlags() error {
+	if c.flags[0].IsSet {
+		c.Version()
+		return ErrCmdHandled
+	}
+	return nil
+}
+
+var ErrCmdHandled = errors.New("cmd handled")
+
+func (c *Cli) runSubCmd(cleanArgs []string) (err error) {
+	subCommand := cleanArgs[c.subCmdIdx]
+	subCommandArgs := cleanArgs[c.subCmdIdx+1:]
+
+	// todo add debug printer
+	//fmt.Println("Subcommand", subCommand)
+	//fmt.Println("Args", subCommandArgs)
+
+	for _, cmd := range c.cmds {
+		if cmd.Name() != subCommand {
+			continue
 		}
+
+		if err = cmd.LoadFlags(subCommandArgs); err != nil {
+			return err
+		}
+
+		return cmd.Run()
 	}
 
-	RunBobFile(subCommand)
+	return bob.Run(subCommand, subCommandArgs)
 }
 
 func (c *Cli) PrintHelp() {
@@ -68,27 +96,20 @@ func (c *Cli) PrintHelp() {
 		name := fmt.Sprintf("   %s: %s", cmd.Name(), cmd.Help())
 		fmt.Println(name)
 	}
-
 }
 
-func (c *Cli) ParseFlags(args []string) error {
+func (c *Cli) ParseFlags(args []string) (subCmdIdx int, err error) {
 	if len(args) < 1 {
 		c.PrintHelp()
-		return nil
+		return 0, nil
 	}
 
-	argParser := FlagParser{
-		flags: c.flags,
-	}
-	err := argParser.parse(args)
+	argParser, err := flag.ParseFlags(c.flags, args)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	c.flags = argParser.flags
-	c.subCmdIdx = argParser.current
-
-	return nil
+	return argParser.Current, nil
 }
 
 func (c *Cli) Version() {

@@ -1,9 +1,14 @@
 package main
 
 import (
+	"log"
+
 	"github.com/RA341/bob/cli"
 )
 
 func main() {
-	cli.Run()
+	err := cli.NewApp().Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }

@@ -1,6 +1,7 @@
-package cli
+package bob
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -10,10 +11,12 @@ import (
 	"github.com/RA341/bob/vm"
 )
 
-// BobFileName todo maybe add lowercase support
-const BobFileName = "Bobfile"
+// FileName todo add lowercase support
+const FileName = "Bobfile"
 
-func RunBobFile(cmd string) {
+func Run(cmd string, args []string) error {
+	return fmt.Errorf("bobfile parsing is unimplemented")
+
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Failed to get current working directory: %v", err)
@@ -29,6 +32,8 @@ func RunBobFile(cmd string) {
 
 	vmm := new(vm.VM)
 	vmm.Start(ins, vm.DefaultFns)
+
+	return nil
 }
 
 func AddDefaultEnvs(workingDir string) {
@@ -46,7 +51,7 @@ func getBobFilePath(bobBase string) string {
 			break
 		}
 
-		tmpPath := filepath.Join(bobBase, BobFileName)
+		tmpPath := filepath.Join(bobBase, FileName)
 		stat, err := os.Stat(tmpPath)
 		if err == nil {
 			if stat.IsDir() {
