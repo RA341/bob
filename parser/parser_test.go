@@ -17,7 +17,7 @@ func TestParser_Expression(t *testing.T) {
 }
 
 func TestParser_Expression_vm(t *testing.T) {
-	content := `1 + 2 * (2 + 3)`
+	content := `(2 + 3) * 2 + 1`
 	p := runParse(t, content)
 
 	ins := p.Ins()

@@ -67,15 +67,15 @@ func (vm *VM) run() {
 
 	for range vm.program {
 		if vm.pc >= len(vm.program) {
-			vm.errs = append(vm.errs, fmt.Errorf("vm stack overflow"))
-
-			log.Fatal(
-				"vm attempted to get a instruction that is out of bounds",
-				"Max allowed",
-				len(vm.program),
-				"Attempted",
-				vm.pc,
+			vm.errs = append(
+				vm.errs,
+				fmt.Errorf(
+					"vm attempted to get a instruction that is out of bounds\nMax allowed: %d\nAttempted: %d",
+					len(vm.program),
+					vm.pc,
+				),
 			)
+			return
 		}
 
 		ins := vm.program[vm.pc]
@@ -98,11 +98,24 @@ func (vm *VM) executeInstruction(ins *Ins) bool {
 	case LOAD:
 		val, ok := vm.Vars[ins.Value.Raw]
 		if !ok {
-			log.Fatal("Could not find variable ", ins.Value.Raw)
+			vm.errs = append(
+				vm.errs,
+				fmt.Errorf(
+					"could not find variable: %s",
+					ins.Value.Raw,
+				),
+			)
+			return true
 		}
 		vm.Stack.Push(val)
 	case ADD:
-		vm.add()
+		vm.arithmetic("add")
+	case SUB:
+		vm.arithmetic("sub")
+	case MUL:
+		vm.arithmetic("mul")
+	case DIV:
+		vm.arithmetic("div")
 	case LABEL:
 		// no op only indicate body of the next instruction
 	case JZ:
@@ -110,7 +123,7 @@ func (vm *VM) executeInstruction(ins *Ins) bool {
 		if val {
 			jmpIdx, ok := vm.labels[ins.Value.Raw]
 			if !ok {
-				log.Fatalf("label '%q' does not exist", ins.Value.Raw)
+				vm.errs = append(vm.errs, fmt.Errorf("label '%q' does not exist", ins.Value.Raw))
 			}
 			vm.pc = jmpIdx
 		}
@@ -121,7 +134,7 @@ func (vm *VM) executeInstruction(ins *Ins) bool {
 		if !val {
 			jmpIdx, ok := vm.labels[ins.Value.Raw]
 			if !ok {
-				log.Fatalf("label '%q' does not exist", ins.Value.Raw)
+				vm.errs = append(vm.errs, fmt.Errorf("label '%q' does not exist", ins.Value.Raw))
 			}
 			vm.pc = jmpIdx
 		}
@@ -139,7 +152,6 @@ func (vm *VM) executeInstruction(ins *Ins) bool {
 		vm.compare(true)
 	case LT:
 		vm.compare(false)
-
 	case NOT:
 		v := vm.mustPopBool()
 		vm.Stack.Push(BoolVal(!v))
@@ -159,7 +171,10 @@ func (vm *VM) executeInstruction(ins *Ins) bool {
 		log.Println("VM exited successfully")
 		return true
 	default:
-		log.Fatal(red.Sprintf("Unsupported op type: %q", ins.OpType))
+		vm.errs = append(
+			vm.errs,
+			fmt.Errorf("unsupported op type: %q", ins.OpType),
+		)
 	}
 	return false
 }
@@ -167,7 +182,7 @@ func (vm *VM) executeInstruction(ins *Ins) bool {
 func (vm *VM) mustPopBool() bool {
 	popBool, err := vm.popBool()
 	if err != nil {
-		log.Fatal(err)
+		vm.errs = append(vm.errs, err)
 	}
 	return popBool
 }
@@ -197,11 +212,13 @@ func (vm *VM) popBool() (bool, error) {
 func (vm *VM) popAssert(vt ValueType) Value {
 	val := vm.Stack.MustPop()
 	if val.Type != vt {
-		log.Fatalf(
-			"expected %s type got [%s]: %s",
-			vt.String(),
-			val.Type,
-			val.Raw,
+		vm.errs = append(vm.errs,
+			fmt.Errorf(
+				"expected %s type got [%s]: %s",
+				vt.String(),
+				val.Type,
+				val.Raw,
+			),
 		)
 	}
 	return val
@@ -247,7 +264,7 @@ func (vm *VM) call() {
 	}
 }
 
-func (vm *VM) add() {
+func (vm *VM) arithmetic(op string) {
 	v1 := vm.Stack.MustPop()
 	v2 := vm.Stack.MustPop()
 
@@ -255,18 +272,40 @@ func (vm *VM) add() {
 	case v1.Type == VTInt && v2.Type == VTInt:
 		i1, _ := strconv.Atoi(v1.Raw)
 		i2, _ := strconv.Atoi(v2.Raw)
-		vm.Stack.Push(IntVal(i1 + i2))
+		var result int
+		switch op {
+		case "add":
+			result = i1 + i2
+		case "sub":
+			result = i1 - i2
+		case "mul":
+			result = i1 * i2
+		case "div":
+			result = i1 / i2
+		}
+		vm.Stack.Push(IntVal(result))
 
 	case v1.Type == VTFloat || v2.Type == VTFloat:
 		f1, _ := strconv.ParseFloat(v1.Raw, 64)
 		f2, _ := strconv.ParseFloat(v2.Raw, 64)
-		vm.Stack.Push(FloatVal(f1 + f2))
+		var result float64
+		switch op {
+		case "add":
+			result = f1 + f2
+		case "sub":
+			result = f1 - f2
+		case "mul":
+			result = f1 * f2
+		case "div":
+			result = f1 / f2
+		}
+		vm.Stack.Push(FloatVal(result))
 
-	case v1.Type == VTString && v2.Type == VTString:
+	case v1.Type == VTString && v2.Type == VTString && op == "add":
 		vm.Stack.Push(StrVal(v1.Raw + v2.Raw))
 
 	default:
-		log.Fatal(red.Sprintf("type mismatch: cannot add %v and %v", v1.Type, v2.Type))
+		log.Fatal(red.Sprintf("type mismatch: cannot %s %v and %v", op, v1.Type, v2.Type))
 	}
 }
 
