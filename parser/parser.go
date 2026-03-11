@@ -124,12 +124,12 @@ func (p *Parser) factor() Expr {
 	un := p.unary()
 
 	for p.Match(SLASH, STAR) {
-		un2 := p.unary()
+		// always get the op first before getting right
 		op := p.Prev()
 		un = ExprBinary{
 			left:     un,
 			operator: op,
-			right:    un2,
+			right:    p.unary(),
 		}
 	}
 

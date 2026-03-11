@@ -56,7 +56,7 @@ type ExprGrouping struct {
 
 func (e ExprGrouping) Ins() []vm.Ins {
 	// todo sketchy not sure
-	return e.Ins()
+	return e.expr.Ins()
 }
 
 func (e ExprGrouping) Str() string {
@@ -79,7 +79,18 @@ func (e ExprBinary) Ins() []vm.Ins {
 		op = []vm.Ins{
 			vm.O(vm.ADD),
 		}
-
+	case MINUS:
+		op = []vm.Ins{
+			vm.O(vm.SUB),
+		}
+	case STAR:
+		op = []vm.Ins{
+			vm.O(vm.MUL),
+		}
+	case SLASH:
+		op = []vm.Ins{
+			vm.O(vm.DIV),
+		}
 	case EqualEqual:
 		op = []vm.Ins{
 			vm.O(vm.EQ),

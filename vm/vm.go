@@ -39,6 +39,8 @@ type VM struct {
 	Builtins map[string]FnDef
 	Vars     map[string]Value
 	pc       int
+
+	errs []error
 }
 
 func (vm *VM) Start(ins []Ins, funcs map[string]FnDef) {
@@ -65,6 +67,8 @@ func (vm *VM) run() {
 
 	for range vm.program {
 		if vm.pc >= len(vm.program) {
+			vm.errs = append(vm.errs, fmt.Errorf("vm stack overflow"))
+
 			log.Fatal(
 				"vm attempted to get a instruction that is out of bounds",
 				"Max allowed",

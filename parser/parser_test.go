@@ -17,14 +17,15 @@ func TestParser_Expression(t *testing.T) {
 }
 
 func TestParser_Expression_vm(t *testing.T) {
-	content := `1 + 2 + (2 + 3)`
+	content := `1 + 2 * (2 + 3)`
 	p := runParse(t, content)
 
+	ins := p.Ins()
 	vv := vm.VM{}
-	vv.Start(p.Ins(), nil)
+	vv.Start(ins, nil)
 
 	v := vv.Stack.MustPop()
-	require.Equal(t, v.Raw, "3")
+	require.Equal(t, v.Raw, "8")
 }
 
 func runParse(t *testing.T, content string) Expr {
