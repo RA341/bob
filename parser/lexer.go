@@ -19,6 +19,8 @@ const (
 
 	Equal
 	EqualEqual
+	ColonEqual
+
 	Greater
 	GreaterEqual
 	Less
@@ -41,6 +43,9 @@ const (
 	AT
 	Identifier
 	Literal
+
+	Num
+	String
 
 	EOF
 )
@@ -102,45 +107,32 @@ func (l *Lexer) ScanToken() {
 	switch ch {
 	case "{":
 		l.AddToken(LCURLY)
-		break
 	case "}":
 		l.AddToken(RCURLY)
-		break
 	case "(":
 		l.AddToken(LPAREN)
-		break
 	case ")":
 		l.AddToken(RPAREN)
-		break
 	case "+":
 		l.AddToken(PLUS)
-		break
 	case "-":
 		l.AddToken(MINUS)
-		break
 	case "*":
 		l.AddToken(STAR)
-		break
 	case ",":
 		l.AddToken(COMMA)
-		break
 	case ":":
-		l.AddToken(COLON)
-		break
+		l.addIfHasNext("=", ColonEqual, COLON)
 	case "@":
 		l.AddToken(AT)
 	case "!":
 		l.addIfHasNext("=", BangEqual, Bang)
-		break
 	case "=":
 		l.addIfHasNext("=", EqualEqual, Equal)
-		break
 	case "<":
 		l.addIfHasNext("=", LessEqual, Less)
-		break
 	case ">":
 		l.addIfHasNext("=", GreaterEqual, Greater)
-		break
 	case "/":
 		if l.HasNext("/") {
 			// comments till the EOL
@@ -150,15 +142,11 @@ func (l *Lexer) ScanToken() {
 		} else {
 			l.AddToken(SLASH)
 		}
-		break
 	case `"`:
 		l.String()
-		break
 	case " ", "\t", "\r":
-		break
 	case "\n":
 		l.line++
-		break
 	default:
 		if isNum(ch) {
 			l.number(ch)
@@ -216,7 +204,7 @@ func (l *Lexer) String() {
 
 	// consume without trailing and starting "
 	strLit := l.contents[l.start+1 : l.current-1]
-	l.AddTokenLit(Literal, string(strLit))
+	l.AddTokenLit(String, string(strLit))
 }
 
 func (l *Lexer) AddToken(tt TokenType) {
@@ -263,7 +251,7 @@ func (l *Lexer) isAtEndN(n int) bool {
 }
 
 func (l *Lexer) number(ch string) {
-
+	l.AddTokenLit(Num, ch)
 }
 
 var keywords = map[string]TokenType{

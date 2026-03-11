@@ -22,7 +22,7 @@ func ParseBobFromContents(cont []byte) ([]vm.Ins, error) {
 		return nil, errors.Join(lex.errs...)
 	}
 
-	parsed := RunParser(lex.tokens)
+	parsed := NewParser(lex.tokens)
 	if parsed.errs != nil {
 		return nil, errors.Join(lex.errs...)
 	}

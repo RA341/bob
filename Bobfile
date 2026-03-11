@@ -2,11 +2,11 @@ version := 1
 
 as := aasdasd
 
-fn hello() {
+hello() {
     print("hello world")
 }
 
-fn helloUser(user!) {
+helloUser(user!) {
     workdir(.build)
     print(hello ${user})
     git status

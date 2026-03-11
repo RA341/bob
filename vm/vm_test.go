@@ -124,7 +124,7 @@ func TestVm_If(t *testing.T) {
 
 	run(vm, input)
 
-	val := vm.stack.MustPop()
+	val := vm.Stack.MustPop()
 	require.Equal(t, eq, val.Raw)
 
 	input = []Ins{
@@ -142,7 +142,7 @@ func TestVm_If(t *testing.T) {
 	}
 
 	run(vm, input)
-	val = vm.stack.MustPop()
+	val = vm.Stack.MustPop()
 	require.Equal(t, NotEq, val.Raw)
 
 	input = []Ins{
@@ -170,7 +170,7 @@ func TestVm_If(t *testing.T) {
 	}
 
 	run(vm, input)
-	val = vm.stack.MustPop()
+	val = vm.Stack.MustPop()
 	require.Equal(t, eq, val.Raw)
 }
 

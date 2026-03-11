@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _TokenTypeName = "LCURLYRCURLYLPARENRPARENCOMMACOLONEqualEqualEqualGreaterGreaterEqualLessLessEqualBangEqualBangSLASHPLUSMINUSSTAROrAndIfElseForATIdentifierLiteralEOF"
+const _TokenTypeName = "LCURLYRCURLYLPARENRPARENCOMMACOLONEqualEqualEqualColonEqualGreaterGreaterEqualLessLessEqualBangEqualBangSLASHPLUSMINUSSTAROrAndIfElseForATIdentifierLiteralNumStringEOF"
 
-var _TokenTypeIndex = [...]uint8{0, 6, 12, 18, 24, 29, 34, 39, 49, 56, 68, 72, 81, 90, 94, 99, 103, 108, 112, 114, 117, 119, 123, 126, 128, 138, 145, 148}
+var _TokenTypeIndex = [...]uint8{0, 6, 12, 18, 24, 29, 34, 39, 49, 59, 66, 78, 82, 91, 100, 104, 109, 113, 118, 122, 124, 127, 129, 133, 136, 138, 148, 155, 158, 164, 167}
 
-const _TokenTypeLowerName = "lcurlyrcurlylparenrparencommacolonequalequalequalgreatergreaterequallesslessequalbangequalbangslashplusminusstarorandifelseforatidentifierliteraleof"
+const _TokenTypeLowerName = "lcurlyrcurlylparenrparencommacolonequalequalequalcolonequalgreatergreaterequallesslessequalbangequalbangslashplusminusstarorandifelseforatidentifierliteralnumstringeof"
 
 func (i TokenType) String() string {
 	if i < 0 || i >= TokenType(len(_TokenTypeIndex)-1) {
@@ -32,28 +32,31 @@ func _TokenTypeNoOp() {
 	_ = x[COLON-(5)]
 	_ = x[Equal-(6)]
 	_ = x[EqualEqual-(7)]
-	_ = x[Greater-(8)]
-	_ = x[GreaterEqual-(9)]
-	_ = x[Less-(10)]
-	_ = x[LessEqual-(11)]
-	_ = x[BangEqual-(12)]
-	_ = x[Bang-(13)]
-	_ = x[SLASH-(14)]
-	_ = x[PLUS-(15)]
-	_ = x[MINUS-(16)]
-	_ = x[STAR-(17)]
-	_ = x[Or-(18)]
-	_ = x[And-(19)]
-	_ = x[If-(20)]
-	_ = x[Else-(21)]
-	_ = x[For-(22)]
-	_ = x[AT-(23)]
-	_ = x[Identifier-(24)]
-	_ = x[Literal-(25)]
-	_ = x[EOF-(26)]
+	_ = x[ColonEqual-(8)]
+	_ = x[Greater-(9)]
+	_ = x[GreaterEqual-(10)]
+	_ = x[Less-(11)]
+	_ = x[LessEqual-(12)]
+	_ = x[BangEqual-(13)]
+	_ = x[Bang-(14)]
+	_ = x[SLASH-(15)]
+	_ = x[PLUS-(16)]
+	_ = x[MINUS-(17)]
+	_ = x[STAR-(18)]
+	_ = x[Or-(19)]
+	_ = x[And-(20)]
+	_ = x[If-(21)]
+	_ = x[Else-(22)]
+	_ = x[For-(23)]
+	_ = x[AT-(24)]
+	_ = x[Identifier-(25)]
+	_ = x[Literal-(26)]
+	_ = x[Num-(27)]
+	_ = x[String-(28)]
+	_ = x[EOF-(29)]
 }
 
-var _TokenTypeValues = []TokenType{LCURLY, RCURLY, LPAREN, RPAREN, COMMA, COLON, Equal, EqualEqual, Greater, GreaterEqual, Less, LessEqual, BangEqual, Bang, SLASH, PLUS, MINUS, STAR, Or, And, If, Else, For, AT, Identifier, Literal, EOF}
+var _TokenTypeValues = []TokenType{LCURLY, RCURLY, LPAREN, RPAREN, COMMA, COLON, Equal, EqualEqual, ColonEqual, Greater, GreaterEqual, Less, LessEqual, BangEqual, Bang, SLASH, PLUS, MINUS, STAR, Or, And, If, Else, For, AT, Identifier, Literal, Num, String, EOF}
 
 var _TokenTypeNameToValueMap = map[string]TokenType{
 	_TokenTypeName[0:6]:          LCURLY,
@@ -72,44 +75,50 @@ var _TokenTypeNameToValueMap = map[string]TokenType{
 	_TokenTypeLowerName[34:39]:   Equal,
 	_TokenTypeName[39:49]:        EqualEqual,
 	_TokenTypeLowerName[39:49]:   EqualEqual,
-	_TokenTypeName[49:56]:        Greater,
-	_TokenTypeLowerName[49:56]:   Greater,
-	_TokenTypeName[56:68]:        GreaterEqual,
-	_TokenTypeLowerName[56:68]:   GreaterEqual,
-	_TokenTypeName[68:72]:        Less,
-	_TokenTypeLowerName[68:72]:   Less,
-	_TokenTypeName[72:81]:        LessEqual,
-	_TokenTypeLowerName[72:81]:   LessEqual,
-	_TokenTypeName[81:90]:        BangEqual,
-	_TokenTypeLowerName[81:90]:   BangEqual,
-	_TokenTypeName[90:94]:        Bang,
-	_TokenTypeLowerName[90:94]:   Bang,
-	_TokenTypeName[94:99]:        SLASH,
-	_TokenTypeLowerName[94:99]:   SLASH,
-	_TokenTypeName[99:103]:       PLUS,
-	_TokenTypeLowerName[99:103]:  PLUS,
-	_TokenTypeName[103:108]:      MINUS,
-	_TokenTypeLowerName[103:108]: MINUS,
-	_TokenTypeName[108:112]:      STAR,
-	_TokenTypeLowerName[108:112]: STAR,
-	_TokenTypeName[112:114]:      Or,
-	_TokenTypeLowerName[112:114]: Or,
-	_TokenTypeName[114:117]:      And,
-	_TokenTypeLowerName[114:117]: And,
-	_TokenTypeName[117:119]:      If,
-	_TokenTypeLowerName[117:119]: If,
-	_TokenTypeName[119:123]:      Else,
-	_TokenTypeLowerName[119:123]: Else,
-	_TokenTypeName[123:126]:      For,
-	_TokenTypeLowerName[123:126]: For,
-	_TokenTypeName[126:128]:      AT,
-	_TokenTypeLowerName[126:128]: AT,
-	_TokenTypeName[128:138]:      Identifier,
-	_TokenTypeLowerName[128:138]: Identifier,
-	_TokenTypeName[138:145]:      Literal,
-	_TokenTypeLowerName[138:145]: Literal,
-	_TokenTypeName[145:148]:      EOF,
-	_TokenTypeLowerName[145:148]: EOF,
+	_TokenTypeName[49:59]:        ColonEqual,
+	_TokenTypeLowerName[49:59]:   ColonEqual,
+	_TokenTypeName[59:66]:        Greater,
+	_TokenTypeLowerName[59:66]:   Greater,
+	_TokenTypeName[66:78]:        GreaterEqual,
+	_TokenTypeLowerName[66:78]:   GreaterEqual,
+	_TokenTypeName[78:82]:        Less,
+	_TokenTypeLowerName[78:82]:   Less,
+	_TokenTypeName[82:91]:        LessEqual,
+	_TokenTypeLowerName[82:91]:   LessEqual,
+	_TokenTypeName[91:100]:       BangEqual,
+	_TokenTypeLowerName[91:100]:  BangEqual,
+	_TokenTypeName[100:104]:      Bang,
+	_TokenTypeLowerName[100:104]: Bang,
+	_TokenTypeName[104:109]:      SLASH,
+	_TokenTypeLowerName[104:109]: SLASH,
+	_TokenTypeName[109:113]:      PLUS,
+	_TokenTypeLowerName[109:113]: PLUS,
+	_TokenTypeName[113:118]:      MINUS,
+	_TokenTypeLowerName[113:118]: MINUS,
+	_TokenTypeName[118:122]:      STAR,
+	_TokenTypeLowerName[118:122]: STAR,
+	_TokenTypeName[122:124]:      Or,
+	_TokenTypeLowerName[122:124]: Or,
+	_TokenTypeName[124:127]:      And,
+	_TokenTypeLowerName[124:127]: And,
+	_TokenTypeName[127:129]:      If,
+	_TokenTypeLowerName[127:129]: If,
+	_TokenTypeName[129:133]:      Else,
+	_TokenTypeLowerName[129:133]: Else,
+	_TokenTypeName[133:136]:      For,
+	_TokenTypeLowerName[133:136]: For,
+	_TokenTypeName[136:138]:      AT,
+	_TokenTypeLowerName[136:138]: AT,
+	_TokenTypeName[138:148]:      Identifier,
+	_TokenTypeLowerName[138:148]: Identifier,
+	_TokenTypeName[148:155]:      Literal,
+	_TokenTypeLowerName[148:155]: Literal,
+	_TokenTypeName[155:158]:      Num,
+	_TokenTypeLowerName[155:158]: Num,
+	_TokenTypeName[158:164]:      String,
+	_TokenTypeLowerName[158:164]: String,
+	_TokenTypeName[164:167]:      EOF,
+	_TokenTypeLowerName[164:167]: EOF,
 }
 
 var _TokenTypeNames = []string{
@@ -121,25 +130,28 @@ var _TokenTypeNames = []string{
 	_TokenTypeName[29:34],
 	_TokenTypeName[34:39],
 	_TokenTypeName[39:49],
-	_TokenTypeName[49:56],
-	_TokenTypeName[56:68],
-	_TokenTypeName[68:72],
-	_TokenTypeName[72:81],
-	_TokenTypeName[81:90],
-	_TokenTypeName[90:94],
-	_TokenTypeName[94:99],
-	_TokenTypeName[99:103],
-	_TokenTypeName[103:108],
-	_TokenTypeName[108:112],
-	_TokenTypeName[112:114],
-	_TokenTypeName[114:117],
-	_TokenTypeName[117:119],
-	_TokenTypeName[119:123],
-	_TokenTypeName[123:126],
-	_TokenTypeName[126:128],
-	_TokenTypeName[128:138],
-	_TokenTypeName[138:145],
-	_TokenTypeName[145:148],
+	_TokenTypeName[49:59],
+	_TokenTypeName[59:66],
+	_TokenTypeName[66:78],
+	_TokenTypeName[78:82],
+	_TokenTypeName[82:91],
+	_TokenTypeName[91:100],
+	_TokenTypeName[100:104],
+	_TokenTypeName[104:109],
+	_TokenTypeName[109:113],
+	_TokenTypeName[113:118],
+	_TokenTypeName[118:122],
+	_TokenTypeName[122:124],
+	_TokenTypeName[124:127],
+	_TokenTypeName[127:129],
+	_TokenTypeName[129:133],
+	_TokenTypeName[133:136],
+	_TokenTypeName[136:138],
+	_TokenTypeName[138:148],
+	_TokenTypeName[148:155],
+	_TokenTypeName[155:158],
+	_TokenTypeName[158:164],
+	_TokenTypeName[164:167],
 }
 
 // TokenTypeString retrieves an enum value from the enum constants string name.

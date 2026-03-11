@@ -1,7 +1,8 @@
 program = statement * EOF ;
 
-statement = exprStmt |
-            printStmt ;
+statement = printStmt |
+            exprStmt |
+            fnDec ;
 
 expression = assignment ;
 

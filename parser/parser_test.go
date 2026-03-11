@@ -3,21 +3,38 @@ package parser
 import (
 	"testing"
 
+	"github.com/RA341/bob/vm"
 	"github.com/stretchr/testify/require"
 )
 
-func TestParser(t *testing.T) {
-	content := `
-cond1 = value
-cond2 = value2
+func TestParser_Expression(t *testing.T) {
+	content := `1 + 2 + (2 + 3)`
+	runParse(t, content)
 
-if cond1 == cond2 {
-	print("cond1 is equal")
+	// todo not sure how to handle this
+	//content = `(1 + 2)(2 + 3)`
+	//runParse(t, content)
 }
-`
 
+func TestParser_Expression_vm(t *testing.T) {
+	content := `1 + 2 + (2 + 3)`
+	p := runParse(t, content)
+
+	vv := vm.VM{}
+	vv.Start(p.Ins(), nil)
+
+	v := vv.Stack.MustPop()
+	require.Equal(t, v.Raw, "3")
+}
+
+func runParse(t *testing.T, content string) Expr {
 	lex := RunLexer([]byte(content))
 	require.Nil(t, lex.errs)
 
-	RunParser(lex.tokens)
+	p, err := RunParser(lex.tokens)
+	require.NoError(t, err)
+
+	t.Log(p.Str())
+
+	return p
 }

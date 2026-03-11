@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _OpTypeName = "PUSHPOPSTORECALLLOADADDHALTLABELRETJMPJZJNZNOTORANDEQGTLT"
+const _OpTypeName = "PUSHPOPSTORECALLLOADADDMULSUBDIVHALTLABELRETJMPJZJNZNOTORANDEQGTLT"
 
-var _OpTypeIndex = [...]uint8{0, 4, 7, 12, 16, 20, 23, 27, 32, 35, 38, 40, 43, 46, 48, 51, 53, 55, 57}
+var _OpTypeIndex = [...]uint8{0, 4, 7, 12, 16, 20, 23, 26, 29, 32, 36, 41, 44, 47, 49, 52, 55, 57, 60, 62, 64, 66}
 
-const _OpTypeLowerName = "pushpopstorecallloadaddhaltlabelretjmpjzjnznotorandeqgtlt"
+const _OpTypeLowerName = "pushpopstorecallloadaddmulsubdivhaltlabelretjmpjzjnznotorandeqgtlt"
 
 func (i OpType) String() string {
 	if i < 0 || i >= OpType(len(_OpTypeIndex)-1) {
@@ -30,21 +30,24 @@ func _OpTypeNoOp() {
 	_ = x[CALL-(3)]
 	_ = x[LOAD-(4)]
 	_ = x[ADD-(5)]
-	_ = x[HALT-(6)]
-	_ = x[LABEL-(7)]
-	_ = x[RET-(8)]
-	_ = x[JMP-(9)]
-	_ = x[JZ-(10)]
-	_ = x[JNZ-(11)]
-	_ = x[NOT-(12)]
-	_ = x[OR-(13)]
-	_ = x[AND-(14)]
-	_ = x[EQ-(15)]
-	_ = x[GT-(16)]
-	_ = x[LT-(17)]
+	_ = x[MUL-(6)]
+	_ = x[SUB-(7)]
+	_ = x[DIV-(8)]
+	_ = x[HALT-(9)]
+	_ = x[LABEL-(10)]
+	_ = x[RET-(11)]
+	_ = x[JMP-(12)]
+	_ = x[JZ-(13)]
+	_ = x[JNZ-(14)]
+	_ = x[NOT-(15)]
+	_ = x[OR-(16)]
+	_ = x[AND-(17)]
+	_ = x[EQ-(18)]
+	_ = x[GT-(19)]
+	_ = x[LT-(20)]
 }
 
-var _OpTypeValues = []OpType{PUSH, POP, STORE, CALL, LOAD, ADD, HALT, LABEL, RET, JMP, JZ, JNZ, NOT, OR, AND, EQ, GT, LT}
+var _OpTypeValues = []OpType{PUSH, POP, STORE, CALL, LOAD, ADD, MUL, SUB, DIV, HALT, LABEL, RET, JMP, JZ, JNZ, NOT, OR, AND, EQ, GT, LT}
 
 var _OpTypeNameToValueMap = map[string]OpType{
 	_OpTypeName[0:4]:        PUSH,
@@ -59,30 +62,36 @@ var _OpTypeNameToValueMap = map[string]OpType{
 	_OpTypeLowerName[16:20]: LOAD,
 	_OpTypeName[20:23]:      ADD,
 	_OpTypeLowerName[20:23]: ADD,
-	_OpTypeName[23:27]:      HALT,
-	_OpTypeLowerName[23:27]: HALT,
-	_OpTypeName[27:32]:      LABEL,
-	_OpTypeLowerName[27:32]: LABEL,
-	_OpTypeName[32:35]:      RET,
-	_OpTypeLowerName[32:35]: RET,
-	_OpTypeName[35:38]:      JMP,
-	_OpTypeLowerName[35:38]: JMP,
-	_OpTypeName[38:40]:      JZ,
-	_OpTypeLowerName[38:40]: JZ,
-	_OpTypeName[40:43]:      JNZ,
-	_OpTypeLowerName[40:43]: JNZ,
-	_OpTypeName[43:46]:      NOT,
-	_OpTypeLowerName[43:46]: NOT,
-	_OpTypeName[46:48]:      OR,
-	_OpTypeLowerName[46:48]: OR,
-	_OpTypeName[48:51]:      AND,
-	_OpTypeLowerName[48:51]: AND,
-	_OpTypeName[51:53]:      EQ,
-	_OpTypeLowerName[51:53]: EQ,
-	_OpTypeName[53:55]:      GT,
-	_OpTypeLowerName[53:55]: GT,
-	_OpTypeName[55:57]:      LT,
-	_OpTypeLowerName[55:57]: LT,
+	_OpTypeName[23:26]:      MUL,
+	_OpTypeLowerName[23:26]: MUL,
+	_OpTypeName[26:29]:      SUB,
+	_OpTypeLowerName[26:29]: SUB,
+	_OpTypeName[29:32]:      DIV,
+	_OpTypeLowerName[29:32]: DIV,
+	_OpTypeName[32:36]:      HALT,
+	_OpTypeLowerName[32:36]: HALT,
+	_OpTypeName[36:41]:      LABEL,
+	_OpTypeLowerName[36:41]: LABEL,
+	_OpTypeName[41:44]:      RET,
+	_OpTypeLowerName[41:44]: RET,
+	_OpTypeName[44:47]:      JMP,
+	_OpTypeLowerName[44:47]: JMP,
+	_OpTypeName[47:49]:      JZ,
+	_OpTypeLowerName[47:49]: JZ,
+	_OpTypeName[49:52]:      JNZ,
+	_OpTypeLowerName[49:52]: JNZ,
+	_OpTypeName[52:55]:      NOT,
+	_OpTypeLowerName[52:55]: NOT,
+	_OpTypeName[55:57]:      OR,
+	_OpTypeLowerName[55:57]: OR,
+	_OpTypeName[57:60]:      AND,
+	_OpTypeLowerName[57:60]: AND,
+	_OpTypeName[60:62]:      EQ,
+	_OpTypeLowerName[60:62]: EQ,
+	_OpTypeName[62:64]:      GT,
+	_OpTypeLowerName[62:64]: GT,
+	_OpTypeName[64:66]:      LT,
+	_OpTypeLowerName[64:66]: LT,
 }
 
 var _OpTypeNames = []string{
@@ -92,18 +101,21 @@ var _OpTypeNames = []string{
 	_OpTypeName[12:16],
 	_OpTypeName[16:20],
 	_OpTypeName[20:23],
-	_OpTypeName[23:27],
-	_OpTypeName[27:32],
-	_OpTypeName[32:35],
-	_OpTypeName[35:38],
-	_OpTypeName[38:40],
-	_OpTypeName[40:43],
-	_OpTypeName[43:46],
-	_OpTypeName[46:48],
-	_OpTypeName[48:51],
-	_OpTypeName[51:53],
-	_OpTypeName[53:55],
+	_OpTypeName[23:26],
+	_OpTypeName[26:29],
+	_OpTypeName[29:32],
+	_OpTypeName[32:36],
+	_OpTypeName[36:41],
+	_OpTypeName[41:44],
+	_OpTypeName[44:47],
+	_OpTypeName[47:49],
+	_OpTypeName[49:52],
+	_OpTypeName[52:55],
 	_OpTypeName[55:57],
+	_OpTypeName[57:60],
+	_OpTypeName[60:62],
+	_OpTypeName[62:64],
+	_OpTypeName[64:66],
 }
 
 // OpTypeString retrieves an enum value from the enum constants string name.

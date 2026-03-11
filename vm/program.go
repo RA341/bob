@@ -9,6 +9,12 @@ type Program struct {
 	input []Ins
 }
 
+func NewProgram(in []Ins) *Program {
+	return &Program{
+		input: in,
+	}
+}
+
 func (p *Program) Get() []Ins {
 	return p.input
 }

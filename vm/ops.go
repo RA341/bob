@@ -20,6 +20,9 @@ const (
 	// LOAD resolves a var from the stack
 	LOAD
 	ADD
+	MUL
+	SUB
+	DIV
 
 	HALT
 	LABEL

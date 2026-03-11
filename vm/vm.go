@@ -31,7 +31,7 @@ func NewFnDev(
 
 type VM struct {
 	program []Ins
-	stack   Stack[Value]
+	Stack   Stack[Value]
 
 	callStack Stack[int]
 	labels    map[string]int
@@ -53,10 +53,10 @@ func (vm *VM) Start(ins []Ins, funcs map[string]FnDef) {
 		vm.Builtins = make(map[string]FnDef)
 	}
 
-	vm.Run()
+	vm.run()
 }
 
-func (vm *VM) Run() {
+func (vm *VM) run() {
 	for i, ins := range vm.program {
 		if ins.OpType == LABEL {
 			vm.labels[ins.Value.Raw] = i
@@ -86,19 +86,19 @@ func (vm *VM) Run() {
 func (vm *VM) executeInstruction(ins *Ins) bool {
 	switch ins.OpType {
 	case PUSH:
-		vm.stack.Push(ins.Value)
+		vm.Stack.Push(ins.Value)
 	case STORE:
-		vm.Store()
+		vm.store()
 	case CALL:
-		vm.Call()
+		vm.call()
 	case LOAD:
 		val, ok := vm.Vars[ins.Value.Raw]
 		if !ok {
 			log.Fatal("Could not find variable ", ins.Value.Raw)
 		}
-		vm.stack.Push(val)
+		vm.Stack.Push(val)
 	case ADD:
-		vm.Add()
+		vm.add()
 	case LABEL:
 		// no op only indicate body of the next instruction
 	case JZ:
@@ -126,31 +126,31 @@ func (vm *VM) executeInstruction(ins *Ins) bool {
 		vm.pc = retPc
 
 	case EQ:
-		cond1 := vm.stack.MustPop()
-		cond2 := vm.stack.MustPop()
+		cond1 := vm.Stack.MustPop()
+		cond2 := vm.Stack.MustPop()
 
 		res := cond1.Raw == cond2.Raw
-		vm.stack.Push(BoolVal(res))
+		vm.Stack.Push(BoolVal(res))
 	case GT:
-		vm.Compare(true)
+		vm.compare(true)
 	case LT:
-		vm.Compare(false)
+		vm.compare(false)
 
 	case NOT:
 		v := vm.mustPopBool()
-		vm.stack.Push(BoolVal(!v))
+		vm.Stack.Push(BoolVal(!v))
 	case AND:
 		cond1 := vm.mustPopBool()
 		cond2 := vm.mustPopBool()
 
 		res := cond1 && cond2
-		vm.stack.Push(BoolVal(res))
+		vm.Stack.Push(BoolVal(res))
 	case OR:
 		cond1 := vm.mustPopBool()
 		cond2 := vm.mustPopBool()
 
 		res := cond1 || cond2
-		vm.stack.Push(BoolVal(res))
+		vm.Stack.Push(BoolVal(res))
 	case HALT:
 		log.Println("VM exited successfully")
 		return true
@@ -169,7 +169,7 @@ func (vm *VM) mustPopBool() bool {
 }
 
 func (vm *VM) popBool() (bool, error) {
-	val, err := vm.stack.Pop()
+	val, err := vm.Stack.Pop()
 	if err != nil {
 		return false, err
 	}
@@ -191,7 +191,7 @@ func (vm *VM) popBool() (bool, error) {
 }
 
 func (vm *VM) popAssert(vt ValueType) Value {
-	val := vm.stack.MustPop()
+	val := vm.Stack.MustPop()
 	if val.Type != vt {
 		log.Fatalf(
 			"expected %s type got [%s]: %s",
@@ -203,21 +203,21 @@ func (vm *VM) popAssert(vt ValueType) Value {
 	return val
 }
 
-func (vm *VM) Store() {
-	varName := vm.stack.MustPop()
-	varVal := vm.stack.MustPop()
+func (vm *VM) store() {
+	varName := vm.Stack.MustPop()
+	varVal := vm.Stack.MustPop()
 	vm.Vars[varName.Raw] = varVal
 }
 
-func (vm *VM) Call() {
-	fnName := vm.stack.MustPop()
+func (vm *VM) call() {
+	fnName := vm.Stack.MustPop()
 
 	fnDef, ok := vm.Builtins[fnName.Raw]
 	if !ok {
 		log.Fatal(red.Sprintf("no function found with name name: %q", fnName))
 	}
 
-	varCountStr := vm.stack.MustPop()
+	varCountStr := vm.Stack.MustPop()
 	argCount, err := strconv.Atoi(varCountStr.Raw)
 	if err != nil {
 		log.Fatal(
@@ -233,7 +233,7 @@ func (vm *VM) Call() {
 
 	args := make([]string, argCount)
 	for i := range argCount {
-		argStr := vm.stack.MustPop()
+		argStr := vm.Stack.MustPop()
 		args[i] = argStr.Raw
 	}
 
@@ -243,32 +243,32 @@ func (vm *VM) Call() {
 	}
 }
 
-func (vm *VM) Add() {
-	v1 := vm.stack.MustPop()
-	v2 := vm.stack.MustPop()
+func (vm *VM) add() {
+	v1 := vm.Stack.MustPop()
+	v2 := vm.Stack.MustPop()
 
 	switch {
 	case v1.Type == VTInt && v2.Type == VTInt:
 		i1, _ := strconv.Atoi(v1.Raw)
 		i2, _ := strconv.Atoi(v2.Raw)
-		vm.stack.Push(IntVal(i1 + i2))
+		vm.Stack.Push(IntVal(i1 + i2))
 
 	case v1.Type == VTFloat || v2.Type == VTFloat:
 		f1, _ := strconv.ParseFloat(v1.Raw, 64)
 		f2, _ := strconv.ParseFloat(v2.Raw, 64)
-		vm.stack.Push(FloatVal(f1 + f2))
+		vm.Stack.Push(FloatVal(f1 + f2))
 
 	case v1.Type == VTString && v2.Type == VTString:
-		vm.stack.Push(StrVal(v1.Raw + v2.Raw))
+		vm.Stack.Push(StrVal(v1.Raw + v2.Raw))
 
 	default:
 		log.Fatal(red.Sprintf("type mismatch: cannot add %v and %v", v1.Type, v2.Type))
 	}
 }
 
-func (vm *VM) Compare(shouldBeGreater bool) {
-	v1 := vm.stack.MustPop()
-	v2 := vm.stack.MustPop()
+func (vm *VM) compare(shouldBeGreater bool) {
+	v1 := vm.Stack.MustPop()
+	v2 := vm.Stack.MustPop()
 
 	var res int
 
@@ -292,9 +292,9 @@ func (vm *VM) Compare(shouldBeGreater bool) {
 	}
 
 	if shouldBeGreater {
-		vm.stack.Push(BoolVal(res == 1))
+		vm.Stack.Push(BoolVal(res == 1))
 	} else {
-		vm.stack.Push(BoolVal(res == -1))
+		vm.Stack.Push(BoolVal(res == -1))
 	}
 
 }
