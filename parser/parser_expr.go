@@ -9,8 +9,8 @@ import (
 )
 
 type Expr interface {
+	Instructions
 	Str() string
-	Ins() []vm.Ins
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -125,11 +125,11 @@ func (e ExprBinary) Ins() []vm.Ins {
 		return nil
 	}
 
-	lins := e.left.Ins()
-	rins := e.right.Ins()
+	lIns := e.left.Ins()
+	rIns := e.right.Ins()
 	factors := append(
-		lins,
-		rins...,
+		lIns,
+		rIns...,
 	)
 
 	return append(factors, op...)
@@ -194,17 +194,16 @@ func (e *ExprUnary) Str() string {
 
 //////////////////////////////////////////////////////////////////////
 
-type Stmt struct {
+type ExprVar struct {
+	tok Token
 }
 
-func (s *Stmt) Ins() []vm.Ins {
+func (e ExprVar) Ins() []vm.Ins {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s *Stmt) Str() string {
+func (e ExprVar) Str() string {
 	//TODO implement me
 	panic("implement me")
 }
-
-//////////////////////////////////////////////////////////////////////

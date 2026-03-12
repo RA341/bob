@@ -15,7 +15,7 @@ const (
 	RPAREN
 
 	COMMA
-	COLON
+	Colon
 
 	Equal
 	EqualEqual
@@ -43,6 +43,8 @@ const (
 	AT
 	Identifier
 	Literal
+	Print
+	Var
 
 	Num
 	String
@@ -122,7 +124,7 @@ func (l *Lexer) ScanToken() {
 	case ",":
 		l.AddToken(COMMA)
 	case ":":
-		l.addIfHasNext("=", ColonEqual, COLON)
+		l.addIfHasNext("=", ColonEqual, Colon)
 	case "@":
 		l.AddToken(AT)
 	case "!":
@@ -255,6 +257,7 @@ func (l *Lexer) number(ch string) {
 }
 
 var keywords = map[string]TokenType{
+	"var":  Var,
 	"and":  And,
 	"or":   Or,
 	"for":  For,
@@ -273,7 +276,7 @@ func (l *Lexer) identifier() {
 		keyword = Identifier
 	}
 
-	l.AddToken(keyword)
+	l.AddTokenLit(keyword, string(iden))
 }
 
 func isAlphaNum(r string) bool {

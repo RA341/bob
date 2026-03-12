@@ -50,7 +50,8 @@ const (
 type ValueType int
 
 const (
-	VTString ValueType = iota
+	VTNil ValueType = iota
+	VTString
 	VTInt
 	VTFloat
 	VTBool
@@ -110,6 +111,10 @@ func OV(op OpType, val Value) Ins {
 
 func OVInt(op OpType, val int) Ins {
 	return Ins{OpType: op, Value: IntVal(val)}
+}
+
+func OVNil(op OpType) Ins {
+	return Ins{OpType: op, Value: Value{Type: VTNil, Raw: ""}}
 }
 
 func OVStr(op OpType, val string) Ins {

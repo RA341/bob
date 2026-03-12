@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _TokenTypeName = "LCURLYRCURLYLPARENRPARENCOMMACOLONEqualEqualEqualColonEqualGreaterGreaterEqualLessLessEqualBangEqualBangSLASHPLUSMINUSSTAROrAndIfElseForATIdentifierLiteralNumStringEOF"
+const _TokenTypeName = "LCURLYRCURLYLPARENRPARENCOMMAColonEqualEqualEqualColonEqualGreaterGreaterEqualLessLessEqualBangEqualBangSLASHPLUSMINUSSTAROrAndIfElseForATIdentifierLiteralPrintVarNumStringEOF"
 
-var _TokenTypeIndex = [...]uint8{0, 6, 12, 18, 24, 29, 34, 39, 49, 59, 66, 78, 82, 91, 100, 104, 109, 113, 118, 122, 124, 127, 129, 133, 136, 138, 148, 155, 158, 164, 167}
+var _TokenTypeIndex = [...]uint8{0, 6, 12, 18, 24, 29, 34, 39, 49, 59, 66, 78, 82, 91, 100, 104, 109, 113, 118, 122, 124, 127, 129, 133, 136, 138, 148, 155, 160, 163, 166, 172, 175}
 
-const _TokenTypeLowerName = "lcurlyrcurlylparenrparencommacolonequalequalequalcolonequalgreatergreaterequallesslessequalbangequalbangslashplusminusstarorandifelseforatidentifierliteralnumstringeof"
+const _TokenTypeLowerName = "lcurlyrcurlylparenrparencommacolonequalequalequalcolonequalgreatergreaterequallesslessequalbangequalbangslashplusminusstarorandifelseforatidentifierliteralprintvarnumstringeof"
 
 func (i TokenType) String() string {
 	if i < 0 || i >= TokenType(len(_TokenTypeIndex)-1) {
@@ -29,7 +29,7 @@ func _TokenTypeNoOp() {
 	_ = x[LPAREN-(2)]
 	_ = x[RPAREN-(3)]
 	_ = x[COMMA-(4)]
-	_ = x[COLON-(5)]
+	_ = x[Colon-(5)]
 	_ = x[Equal-(6)]
 	_ = x[EqualEqual-(7)]
 	_ = x[ColonEqual-(8)]
@@ -51,12 +51,14 @@ func _TokenTypeNoOp() {
 	_ = x[AT-(24)]
 	_ = x[Identifier-(25)]
 	_ = x[Literal-(26)]
-	_ = x[Num-(27)]
-	_ = x[String-(28)]
-	_ = x[EOF-(29)]
+	_ = x[Print-(27)]
+	_ = x[Var-(28)]
+	_ = x[Num-(29)]
+	_ = x[String-(30)]
+	_ = x[EOF-(31)]
 }
 
-var _TokenTypeValues = []TokenType{LCURLY, RCURLY, LPAREN, RPAREN, COMMA, COLON, Equal, EqualEqual, ColonEqual, Greater, GreaterEqual, Less, LessEqual, BangEqual, Bang, SLASH, PLUS, MINUS, STAR, Or, And, If, Else, For, AT, Identifier, Literal, Num, String, EOF}
+var _TokenTypeValues = []TokenType{LCURLY, RCURLY, LPAREN, RPAREN, COMMA, Colon, Equal, EqualEqual, ColonEqual, Greater, GreaterEqual, Less, LessEqual, BangEqual, Bang, SLASH, PLUS, MINUS, STAR, Or, And, If, Else, For, AT, Identifier, Literal, Print, Var, Num, String, EOF}
 
 var _TokenTypeNameToValueMap = map[string]TokenType{
 	_TokenTypeName[0:6]:          LCURLY,
@@ -69,8 +71,8 @@ var _TokenTypeNameToValueMap = map[string]TokenType{
 	_TokenTypeLowerName[18:24]:   RPAREN,
 	_TokenTypeName[24:29]:        COMMA,
 	_TokenTypeLowerName[24:29]:   COMMA,
-	_TokenTypeName[29:34]:        COLON,
-	_TokenTypeLowerName[29:34]:   COLON,
+	_TokenTypeName[29:34]:        Colon,
+	_TokenTypeLowerName[29:34]:   Colon,
 	_TokenTypeName[34:39]:        Equal,
 	_TokenTypeLowerName[34:39]:   Equal,
 	_TokenTypeName[39:49]:        EqualEqual,
@@ -113,12 +115,16 @@ var _TokenTypeNameToValueMap = map[string]TokenType{
 	_TokenTypeLowerName[138:148]: Identifier,
 	_TokenTypeName[148:155]:      Literal,
 	_TokenTypeLowerName[148:155]: Literal,
-	_TokenTypeName[155:158]:      Num,
-	_TokenTypeLowerName[155:158]: Num,
-	_TokenTypeName[158:164]:      String,
-	_TokenTypeLowerName[158:164]: String,
-	_TokenTypeName[164:167]:      EOF,
-	_TokenTypeLowerName[164:167]: EOF,
+	_TokenTypeName[155:160]:      Print,
+	_TokenTypeLowerName[155:160]: Print,
+	_TokenTypeName[160:163]:      Var,
+	_TokenTypeLowerName[160:163]: Var,
+	_TokenTypeName[163:166]:      Num,
+	_TokenTypeLowerName[163:166]: Num,
+	_TokenTypeName[166:172]:      String,
+	_TokenTypeLowerName[166:172]: String,
+	_TokenTypeName[172:175]:      EOF,
+	_TokenTypeLowerName[172:175]: EOF,
 }
 
 var _TokenTypeNames = []string{
@@ -149,9 +155,11 @@ var _TokenTypeNames = []string{
 	_TokenTypeName[136:138],
 	_TokenTypeName[138:148],
 	_TokenTypeName[148:155],
-	_TokenTypeName[155:158],
-	_TokenTypeName[158:164],
-	_TokenTypeName[164:167],
+	_TokenTypeName[155:160],
+	_TokenTypeName[160:163],
+	_TokenTypeName[163:166],
+	_TokenTypeName[166:172],
+	_TokenTypeName[172:175],
 }
 
 // TokenTypeString retrieves an enum value from the enum constants string name.

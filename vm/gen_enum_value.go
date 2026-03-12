@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-const _ValueTypeName = "VTStringVTIntVTFloatVTBool"
+const _ValueTypeName = "VTNilVTStringVTIntVTFloatVTBool"
 
-var _ValueTypeIndex = [...]uint8{0, 8, 13, 20, 26}
+var _ValueTypeIndex = [...]uint8{0, 5, 13, 18, 25, 31}
 
-const _ValueTypeLowerName = "vtstringvtintvtfloatvtbool"
+const _ValueTypeLowerName = "vtnilvtstringvtintvtfloatvtbool"
 
 func (i ValueType) String() string {
 	if i < 0 || i >= ValueType(len(_ValueTypeIndex)-1) {
@@ -24,30 +24,34 @@ func (i ValueType) String() string {
 // Re-run the stringer command to generate them again.
 func _ValueTypeNoOp() {
 	var x [1]struct{}
-	_ = x[VTString-(0)]
-	_ = x[VTInt-(1)]
-	_ = x[VTFloat-(2)]
-	_ = x[VTBool-(3)]
+	_ = x[VTNil-(0)]
+	_ = x[VTString-(1)]
+	_ = x[VTInt-(2)]
+	_ = x[VTFloat-(3)]
+	_ = x[VTBool-(4)]
 }
 
-var _ValueTypeValues = []ValueType{VTString, VTInt, VTFloat, VTBool}
+var _ValueTypeValues = []ValueType{VTNil, VTString, VTInt, VTFloat, VTBool}
 
 var _ValueTypeNameToValueMap = map[string]ValueType{
-	_ValueTypeName[0:8]:        VTString,
-	_ValueTypeLowerName[0:8]:   VTString,
-	_ValueTypeName[8:13]:       VTInt,
-	_ValueTypeLowerName[8:13]:  VTInt,
-	_ValueTypeName[13:20]:      VTFloat,
-	_ValueTypeLowerName[13:20]: VTFloat,
-	_ValueTypeName[20:26]:      VTBool,
-	_ValueTypeLowerName[20:26]: VTBool,
+	_ValueTypeName[0:5]:        VTNil,
+	_ValueTypeLowerName[0:5]:   VTNil,
+	_ValueTypeName[5:13]:       VTString,
+	_ValueTypeLowerName[5:13]:  VTString,
+	_ValueTypeName[13:18]:      VTInt,
+	_ValueTypeLowerName[13:18]: VTInt,
+	_ValueTypeName[18:25]:      VTFloat,
+	_ValueTypeLowerName[18:25]: VTFloat,
+	_ValueTypeName[25:31]:      VTBool,
+	_ValueTypeLowerName[25:31]: VTBool,
 }
 
 var _ValueTypeNames = []string{
-	_ValueTypeName[0:8],
-	_ValueTypeName[8:13],
-	_ValueTypeName[13:20],
-	_ValueTypeName[20:26],
+	_ValueTypeName[0:5],
+	_ValueTypeName[5:13],
+	_ValueTypeName[13:18],
+	_ValueTypeName[18:25],
+	_ValueTypeName[25:31],
 }
 
 // ValueTypeString retrieves an enum value from the enum constants string name.

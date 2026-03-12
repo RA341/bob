@@ -35,7 +35,7 @@ type Parser struct {
 	instructions []vm.Ins
 }
 
-func RunParser(token []Token) (Expr, error) {
+func RunParser(token []Token) ([]Statement, error) {
 	p := NewParser(token)
 	result := p.Parse()
 
@@ -59,8 +59,86 @@ func (p *Parser) Err() error {
 	return err
 }
 
-func (p *Parser) Parse() Expr {
-	return p.expression()
+func (p *Parser) Parse() []Statement {
+	var statements []Statement
+
+	for !p.isAtEnd() {
+		statements = append(
+			statements,
+			p.deceleration(),
+		)
+	}
+
+	return statements
+}
+
+func (p *Parser) deceleration() Statement {
+	if p.Match(Var) {
+		return p.varDec()
+	}
+
+	if p.MatchOffset(1, ColonEqual) {
+		return p.varImplicitDec()
+	}
+
+	return p.statement()
+}
+
+// var using 'var someVar = dec'
+func (p *Parser) varDec() Statement {
+	iden := p.consume(Identifier, "Expected identifier after 'var")
+
+	var init Expr
+	if p.Match(Equal) {
+		init = p.expression()
+	}
+
+	return StmtVar{
+		Initializer: init,
+		Identifier:  iden,
+	}
+}
+
+// var using the ':='
+func (p *Parser) varImplicitDec() Statement {
+	identifier := p.prevN(2)
+	if identifier.TokenType != Identifier {
+		p.addErr(ParseErr{
+			tok: identifier,
+			msg: "expected identifier before ':='",
+		})
+
+		return nil
+	}
+
+	init := p.expression()
+
+	return StmtVar{
+		Identifier:  identifier,
+		Initializer: init,
+	}
+}
+
+func (p *Parser) statement() Statement {
+	if p.Match(Print) {
+		return p.printStmt()
+	}
+
+	return p.exprStmt()
+}
+
+func (p *Parser) printStmt() Statement {
+	expr := p.expression()
+	return StmtPrint{
+		expr: expr,
+	}
+}
+
+func (p *Parser) exprStmt() Statement {
+	expr := p.expression()
+	return StmtExpr{
+		exp: expr,
+	}
 }
 
 // expression -> equality ;
@@ -75,7 +153,7 @@ func (p *Parser) equality() Expr {
 	for p.Match(EqualEqual, BangEqual) {
 		left = ExprBinary{
 			left:     left,
-			operator: p.Prev(),
+			operator: p.prev(),
 			right:    p.comparison(),
 		}
 	}
@@ -88,7 +166,7 @@ func (p *Parser) comparison() Expr {
 	term1 := p.term()
 
 	for p.Match(Less, LessEqual, Greater, GreaterEqual) {
-		op := p.Prev()
+		op := p.prev()
 		term2 := p.term()
 
 		term1 = ExprBinary{
@@ -106,7 +184,7 @@ func (p *Parser) term() Expr {
 	fac := p.factor()
 
 	for p.Match(PLUS, MINUS) {
-		op := p.Prev()
+		op := p.prev()
 		fac2 := p.factor()
 
 		fac = ExprBinary{
@@ -125,7 +203,7 @@ func (p *Parser) factor() Expr {
 
 	for p.Match(SLASH, STAR) {
 		// always get the op first before getting right
-		op := p.Prev()
+		op := p.prev()
 		un = ExprBinary{
 			left:     un,
 			operator: op,
@@ -139,7 +217,7 @@ func (p *Parser) factor() Expr {
 // unary -> ( "!" | "-" ) unary | primary ;
 func (p *Parser) unary() Expr {
 	if p.Match(Bang, MINUS) {
-		op := p.Prev()
+		op := p.prev()
 		return &ExprUnary{
 			operator: op,
 			left:     p.unary(),
@@ -154,19 +232,25 @@ func (p *Parser) unary() Expr {
 func (p *Parser) primary() Expr {
 	if p.Match(Num) {
 		return ExprNum{
-			tok: p.Prev(),
+			tok: p.prev(),
 		}
 	}
 
 	if p.Match(String) {
 		return ExprString{
-			tok: p.Prev(),
+			tok: p.prev(),
 		}
 	}
 
 	if p.Match(Literal) {
 		return &ExprLiteral{
-			tok: p.Prev(),
+			tok: p.prev(),
+		}
+	}
+
+	if p.Match(Identifier) {
+		return ExprVar{
+			tok: p.prev(),
 		}
 	}
 
@@ -191,43 +275,59 @@ func (p *Parser) primary() Expr {
 	return nil
 }
 
-func (p *Parser) declaration() (Stmt, error) {
-	if p.Match(Identifier, ColonEqual) {
-		return p.varDec(Identifier)
-	}
-
-	//return t.expression()
-	return Stmt{}, nil
-}
-
 func (p *Parser) sync() {
 
 }
 
-func (p *Parser) varDec(identifier TokenType) (Stmt, error) {
-	return Stmt{}, nil
-}
-
-func (p *Parser) consume(tok TokenType, message string) {
+func (p *Parser) consume(tok TokenType, message string) Token {
 	peek := p.Peek()
 	if peek.TokenType == tok {
-		p.Next()
-		return
+		return p.Next()
 	}
 
 	p.errs = append(
 		p.errs,
 		NewParseErr(peek, message),
 	)
+
+	return Token{}
 }
 
 func (p *Parser) Peek() Token {
 	return p.tokens[p.current]
 }
 
+func (p *Parser) MatchOffset(offset int, match ...TokenType) bool {
+	for _, ty := range match {
+		if p.CheckN(ty, offset) {
+			// include the current the token
+			for range offset + 1 {
+				p.Next()
+			}
+			return true
+		}
+	}
+
+	return false
+}
+
+func (p *Parser) CheckN(match TokenType, offset int) bool {
+	of := p.current + offset
+	if of >= len(p.tokens) {
+		return false
+	}
+
+	tok := p.tokens[of]
+	if tok.TokenType == EOF {
+		return false
+	}
+
+	return tok.TokenType == match
+}
+
 func (p *Parser) MatchExtract(tt ...TokenType) (Token, bool) {
 	if p.Match(tt...) {
-		return p.Prev(), true
+		return p.prev(), true
 	}
 
 	return Token{}, false
@@ -251,8 +351,12 @@ func (p *Parser) Check(tt TokenType) bool {
 	return p.Peek().TokenType == tt
 }
 
-func (p *Parser) Prev() Token {
-	return p.tokens[p.current-1]
+func (p *Parser) prev() Token {
+	return p.prevN(1)
+}
+
+func (p *Parser) prevN(off int) Token {
+	return p.tokens[p.current-off]
 }
 
 func (p *Parser) Next() Token {
@@ -263,4 +367,8 @@ func (p *Parser) Next() Token {
 
 func (p *Parser) isAtEnd() bool {
 	return p.Peek().TokenType == EOF
+}
+
+func (p *Parser) addErr(pe ParseErr) {
+	p.errs = append(p.errs, pe)
 }

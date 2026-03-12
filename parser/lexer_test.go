@@ -14,7 +14,7 @@ func Test_Lex_Basic(t *testing.T) {
 	expected := []TokenType{
 		LPAREN, LCURLY, RCURLY, RPAREN,
 		Less, LessEqual, GreaterEqual, Greater,
-		PLUS, MINUS, STAR, COMMA, COLON,
+		PLUS, MINUS, STAR, COMMA, Colon,
 
 		Bang, BangEqual, EqualEqual,
 
@@ -35,10 +35,10 @@ func Test_Lex_Basic(t *testing.T) {
 	// strings
 	content = `"//({}) < <= >= > + - * , : ! != =="`
 	lex = RunLexer([]byte(content))
-	expected = []TokenType{Literal, EOF}
+	expected = []TokenType{String, EOF}
 	require.Nil(t, lex.errs)
 	require.Equal(t, len(expected), len(lex.tokens))
-	require.Equal(t, expected[0], lex.tokens[0].TokenType)
+	require.Equal(t, expected[0].String(), lex.tokens[0].TokenType.String())
 	require.Equal(t, content[1:len(content)-1], lex.tokens[0].Literal)
 
 	content = `if for else or and`
